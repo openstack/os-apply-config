@@ -67,3 +67,32 @@ class ValueTypeTestCase(testtools.TestCase):
     def test_net_address_bad(self):
         self.assertRaises(config_exception.ConfigException,
                           value_types.ensure_type, "192.0.2.1;DROP TABLE foo")
+
+    def test_dsn_nopass(self):
+        test_dsn = 'mysql://user@host/db'
+        self.assertEqual(test_dsn, value_types.ensure_type(test_dsn, 'dsn'))
+
+    def test_dsn(self):
+        test_dsn = 'mysql://user:pass@host/db'
+        self.assertEqual(test_dsn, value_types.ensure_type(test_dsn, 'dsn'))
+
+    def test_dsn_set_variables(self):
+        test_dsn = 'mysql://user:pass@host/db?charset=utf8'
+        self.assertEqual(test_dsn, value_types.ensure_type(test_dsn, 'dsn'))
+
+    def test_dsn_sqlite_memory(self):
+        test_dsn = 'sqlite://'
+        self.assertEqual(test_dsn, value_types.ensure_type(test_dsn, 'dsn'))
+
+    def test_dsn_sqlite_file(self):
+        test_dsn = 'sqlite:///tmp/foo.db'
+        self.assertEqual(test_dsn, value_types.ensure_type(test_dsn, 'dsn'))
+
+    def test_dsn_bad(self):
+        self.assertRaises(config_exception.ConfigException,
+                          value_types.ensure_type,
+                          "mysql:/user:pass@host/db?charset=utf8", 'dsn')
+        self.assertRaises(config_exception.ConfigException,
+                          value_types.ensure_type,
+                          "mysql://user:pass@host/db?charset=utf8;DROP TABLE "
+                          "foo", 'dsn')
