@@ -20,8 +20,8 @@ import tempfile
 import fixtures
 import testtools
 
+from os_apply_config import apply_config
 from os_apply_config import config_exception
-from os_apply_config import os_apply_config as oca
 
 # example template tree
 TEMPLATES = os.path.join(os.path.dirname(__file__), 'templates')
@@ -82,7 +82,7 @@ class TestRunOSConfigApplier(testtools.TestCase):
             t.flush()
 
     def test_print_key(self):
-        self.assertEqual(0, oca.main(
+        self.assertEqual(0, apply_config.main(
             ['os-apply-config.py', '--metadata', self.path, '--key',
              'database.url', '--type', 'raw']))
         self.stdout.seek(0)
@@ -91,13 +91,13 @@ class TestRunOSConfigApplier(testtools.TestCase):
         self.assertEqual('', self.logger.output)
 
     def test_print_key_missing(self):
-        self.assertEqual(1, oca.main(
+        self.assertEqual(1, apply_config.main(
             ['os-apply-config.py', '--metadata', self.path, '--key',
              'does.not.exist']))
         self.assertIn('does not exist', self.logger.output)
 
     def test_print_key_missing_default(self):
-        self.assertEqual(0, oca.main(
+        self.assertEqual(0, apply_config.main(
             ['os-apply-config.py', '--metadata', self.path, '--key',
              'does.not.exist', '--key-default', '']))
         self.stdout.seek(0)
@@ -105,15 +105,16 @@ class TestRunOSConfigApplier(testtools.TestCase):
         self.assertEqual('', self.logger.output)
 
     def test_print_key_wrong_type(self):
-        self.assertEqual(1, oca.main(
+        self.assertEqual(1, apply_config.main(
             ['os-apply-config.py', '--metadata', self.path, '--key',
              'x', '--type', 'int']))
         self.assertIn('cannot interpret value', self.logger.output)
 
     def test_print_templates(self):
-        oca.main(['os-apply-config', '--print-templates'])
+        apply_config.main(['os-apply-config', '--print-templates'])
         self.stdout.seek(0)
-        self.assertEqual(self.stdout.read().strip(), oca.TEMPLATES_DIR)
+        self.assertEqual(
+            self.stdout.read().strip(), apply_config.TEMPLATES_DIR)
         self.assertEqual('', self.logger.output)
 
 
@@ -130,7 +131,7 @@ class OSConfigApplierTestCase(testtools.TestCase):
             t.write(json.dumps(CONFIG))
             t.flush()
         tmpdir = tempfile.mkdtemp()
-        oca.install_config([path], TEMPLATES, tmpdir, False)
+        apply_config.install_config([path], TEMPLATES, tmpdir, False)
         for path, contents in OUTPUT.items():
             full_path = os.path.join(tmpdir, path[1:])
             assert os.path.exists(full_path)
@@ -142,7 +143,7 @@ class OSConfigApplierTestCase(testtools.TestCase):
             t.write(json.dumps(CONFIG_SUBHASH))
             t.flush()
         tmpdir = tempfile.mkdtemp()
-        oca.install_config(
+        apply_config.install_config(
             [tpath], TEMPLATES, tmpdir, False, 'OpenStack::Config')
         for path, contents in OUTPUT.items():
             full_path = os.path.join(tmpdir, path[1:])
@@ -150,37 +151,39 @@ class OSConfigApplierTestCase(testtools.TestCase):
             self.assertEqual(open(full_path).read(), contents)
 
     def test_build_tree(self):
-        self.assertEqual(oca.build_tree(
-            oca.template_paths(TEMPLATES), CONFIG), OUTPUT)
+        self.assertEqual(apply_config.build_tree(
+            apply_config.template_paths(TEMPLATES), CONFIG), OUTPUT)
 
     def test_render_template(self):
         # execute executable files, moustache non-executables
-        self.assertEqual(oca.render_template(template(
+        self.assertEqual(apply_config.render_template(template(
             "/etc/glance/script.conf"), {"x": "abc"}), "abc\n")
         self.assertRaises(
-            config_exception.ConfigException, oca.render_template, template(
+            config_exception.ConfigException,
+            apply_config.render_template, template(
                 "/etc/glance/script.conf"), {})
 
     def test_render_moustache(self):
-        self.assertEqual(oca.render_moustache("ab{{x.a}}cd", {
+        self.assertEqual(apply_config.render_moustache("ab{{x.a}}cd", {
                          "x": {"a": "123"}}), "ab123cd")
 
     def test_render_moustache_bad_key(self):
-        self.assertEqual(oca.render_moustache("{{badkey}}", {}), u'')
+        self.assertEqual(apply_config.render_moustache("{{badkey}}", {}), u'')
 
     def test_render_executable(self):
         params = {"x": "foo"}
-        self.assertEqual(oca.render_executable(template(
+        self.assertEqual(apply_config.render_executable(template(
             "/etc/glance/script.conf"), params), "foo\n")
 
     def test_render_executable_failure(self):
         self.assertRaises(
             config_exception.ConfigException,
-            oca.render_executable, template("/etc/glance/script.conf"), {})
+            apply_config.render_executable,
+            template("/etc/glance/script.conf"), {})
 
     def test_template_paths(self):
         expected = map(lambda p: (template(p), p), TEMPLATE_PATHS)
-        actual = oca.template_paths(TEMPLATES)
+        actual = apply_config.template_paths(TEMPLATES)
         expected.sort(key=lambda tup: tup[1])
         actual.sort(key=lambda tup: tup[1])
         self.assertEqual(actual, expected)
@@ -190,18 +193,18 @@ class OSConfigApplierTestCase(testtools.TestCase):
             d = {"a": {"b": ["c", "d"]}}
             t.write(json.dumps(d))
             t.flush()
-            self.assertEqual(oca.read_config([t.name]), d)
+            self.assertEqual(apply_config.read_config([t.name]), d)
 
     def test_read_config_bad_json(self):
         with tempfile.NamedTemporaryFile() as t:
             t.write("{{{{")
             t.flush()
             self.assertRaises(config_exception.ConfigException,
-                              oca.read_config, [t.name])
+                              apply_config.read_config, [t.name])
 
     def test_read_config_no_file(self):
         self.assertRaises(config_exception.ConfigException,
-                          oca.read_config, ["/nosuchfile"])
+                          apply_config.read_config, ["/nosuchfile"])
 
     def test_read_config_multi(self):
         with tempfile.NamedTemporaryFile(mode='wb') as t1:
@@ -212,7 +215,7 @@ class OSConfigApplierTestCase(testtools.TestCase):
                 t1.flush()
                 t2.write(json.dumps(d2))
                 t2.flush()
-                result = oca.read_config([t1.name, t2.name])
+                result = apply_config.read_config([t1.name, t2.name])
                 self.assertEqual(d1, result)
 
     def test_read_config_multi_missing1(self):
@@ -222,7 +225,7 @@ class OSConfigApplierTestCase(testtools.TestCase):
             d2 = {"x": {"y": [8, 9]}}
             t2.write(json.dumps(d2))
             t2.flush()
-            result = oca.read_config([t1.name, t2.name])
+            result = apply_config.read_config([t1.name, t2.name])
             self.assertEqual(d2, result)
 
     def test_read_config_multi_missing_bad1(self):
@@ -235,7 +238,7 @@ class OSConfigApplierTestCase(testtools.TestCase):
                 t2.write(json.dumps(d2))
                 t2.flush()
                 self.assertRaises(config_exception.ConfigException,
-                                  oca.read_config, [t1.name, t2.name])
+                                  apply_config.read_config, [t1.name, t2.name])
 
     def test_read_config_multi_missing_all(self):
         with tempfile.NamedTemporaryFile(mode='wb') as t1:
@@ -243,12 +246,12 @@ class OSConfigApplierTestCase(testtools.TestCase):
         with tempfile.NamedTemporaryFile(mode='wb') as t2:
             pass
         self.assertRaises(config_exception.ConfigException,
-                          oca.read_config, [t1.name, t2.name])
+                          apply_config.read_config, [t1.name, t2.name])
 
     def test_strip_hash(self):
         h = {'a': {'b': {'x': 'y'}}, "c": [1, 2, 3]}
-        self.assertEqual(oca.strip_hash(h, 'a.b'), {'x': 'y'})
+        self.assertEqual(apply_config.strip_hash(h, 'a.b'), {'x': 'y'})
         self.assertRaises(config_exception.ConfigException,
-                          oca.strip_hash, h, 'a.nonexistent')
+                          apply_config.strip_hash, h, 'a.nonexistent')
         self.assertRaises(config_exception.ConfigException,
-                          oca.strip_hash, h, 'a.c')
+                          apply_config.strip_hash, h, 'a.c')

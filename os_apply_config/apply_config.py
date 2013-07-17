@@ -23,9 +23,9 @@ import tempfile
 
 from pystache import context
 
-from config_exception import ConfigException
-from renderers import JsonRenderer
-from value_types import ensure_type
+from os_apply_config import config_exception as exc
+from os_apply_config import renderers
+from os_apply_config import value_types
 
 TEMPLATES_DIR = os.environ.get('OS_CONFIG_APPLIER_TEMPLATES', None)
 if TEMPLATES_DIR is None:
@@ -56,9 +56,9 @@ def print_key(config_path, key, type_name, default=None):
                 print default
                 return
             else:
-                raise ConfigException(
+                raise exc.ConfigException(
                     'key %s does not exist in %s' % (key, config_path))
-    ensure_type(config, type_name)
+    value_types.ensure_type(config, type_name)
     print config
 
 
@@ -88,11 +88,11 @@ def render_template(template, config):
         try:
             return render_moustache(open(template).read(), config)
         except context.KeyNotFoundError as e:
-            raise ConfigException(
+            raise exc.ConfigException(
                 "key '%s' from template '%s' does not exist in metadata file."
                 % (e.key, template))
         except Exception as e:
-            raise ConfigException(
+            raise exc.ConfigException(
                 "could not render moustache template %s" % template)
 
 
@@ -101,7 +101,7 @@ def is_executable(path):
 
 
 def render_moustache(text, config):
-    r = JsonRenderer(missing_tags='ignore')
+    r = renderers.JsonRenderer(missing_tags='ignore')
     return r.render(text, config)
 
 
@@ -113,7 +113,7 @@ def render_executable(path, config):
     stdout, stderr = p.communicate(json.dumps(config))
     p.wait()
     if p.returncode != 0:
-        raise ConfigException(
+        raise exc.ConfigException(
             "config script failed: %s\n\nwith output:\n\n%s" %
             (path, stdout + stderr))
     return stdout
@@ -125,8 +125,8 @@ def read_config(paths):
             try:
                 return json.loads(open(path).read())
             except Exception:
-                raise ConfigException("invalid metadata file: %s" % path)
-    raise ConfigException("No metadata found.")
+                raise exc.ConfigException("invalid metadata file: %s" % path)
+    raise exc.ConfigException("No metadata found.")
 
 
 def template_paths(root):
@@ -150,7 +150,7 @@ def strip_hash(h, keys):
         if k in h and isinstance(h[k], dict):
             h = h[k]
         else:
-            raise ConfigException(
+            raise exc.ConfigException(
                 "key '%s' does not correspond to a hash in the metadata file"
                 % keys)
     return h
@@ -206,7 +206,7 @@ def main(argv=sys.argv):
 
     try:
         if opts.templates is None:
-            raise ConfigException('missing option --templates')
+            raise exc.ConfigException('missing option --templates')
 
         if opts.key:
             print_key(opts.metadata,
@@ -217,7 +217,7 @@ def main(argv=sys.argv):
             install_config(opts.metadata, opts.templates, opts.output,
                            opts.validate, opts.subhash)
             logger.info("success")
-    except ConfigException as e:
+    except exc.ConfigException as e:
         logger.error(e)
         return 1
     return 0
