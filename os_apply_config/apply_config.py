@@ -53,13 +53,13 @@ def print_key(config_path, key, type_name, default=None):
             config = config[key]
         except KeyError:
             if default is not None:
-                print default
+                print(str(default))
                 return
             else:
                 raise exc.ConfigException(
                     'key %s does not exist in %s' % (key, config_path))
     value_types.ensure_type(config, type_name)
-    print config
+    print(str(config))
 
 
 def write_file(path, contents):
@@ -68,7 +68,7 @@ def write_file(path, contents):
     os.path.exists(d) or os.makedirs(d)
     with tempfile.NamedTemporaryFile(dir=d, delete=False) as newfile:
         newfile.write(contents)
-        os.chmod(newfile.name, 0644)
+        os.chmod(newfile.name, 0o644)
         os.rename(newfile.name, path)
 
 # return a map of filenames->filecontents
