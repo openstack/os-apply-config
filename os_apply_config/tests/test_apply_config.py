@@ -188,66 +188,6 @@ class OSConfigApplierTestCase(testtools.TestCase):
         actual.sort(key=lambda tup: tup[1])
         self.assertEqual(actual, expected)
 
-    def test_read_config(self):
-        with tempfile.NamedTemporaryFile() as t:
-            d = {"a": {"b": ["c", "d"]}}
-            t.write(json.dumps(d))
-            t.flush()
-            self.assertEqual(apply_config.read_config([t.name]), d)
-
-    def test_read_config_bad_json(self):
-        with tempfile.NamedTemporaryFile() as t:
-            t.write("{{{{")
-            t.flush()
-            self.assertRaises(config_exception.ConfigException,
-                              apply_config.read_config, [t.name])
-
-    def test_read_config_no_file(self):
-        self.assertRaises(config_exception.ConfigException,
-                          apply_config.read_config, ["/nosuchfile"])
-
-    def test_read_config_multi(self):
-        with tempfile.NamedTemporaryFile(mode='wb') as t1:
-            with tempfile.NamedTemporaryFile(mode='wb') as t2:
-                d1 = {"a": {"b": [1, 2]}}
-                d2 = {"x": {"y": [8, 9]}}
-                t1.write(json.dumps(d1))
-                t1.flush()
-                t2.write(json.dumps(d2))
-                t2.flush()
-                result = apply_config.read_config([t1.name, t2.name])
-                self.assertEqual(d1, result)
-
-    def test_read_config_multi_missing1(self):
-        with tempfile.NamedTemporaryFile(mode='wb') as t1:
-            pass
-        with tempfile.NamedTemporaryFile(mode='wb') as t2:
-            d2 = {"x": {"y": [8, 9]}}
-            t2.write(json.dumps(d2))
-            t2.flush()
-            result = apply_config.read_config([t1.name, t2.name])
-            self.assertEqual(d2, result)
-
-    def test_read_config_multi_missing_bad1(self):
-        with tempfile.NamedTemporaryFile(mode='wb') as t1:
-            t1.write('{{{')
-            t1.flush()
-            with tempfile.NamedTemporaryFile(mode='wb') as t2:
-                pass
-                d2 = {"x": {"y": [8, 9]}}
-                t2.write(json.dumps(d2))
-                t2.flush()
-                self.assertRaises(config_exception.ConfigException,
-                                  apply_config.read_config, [t1.name, t2.name])
-
-    def test_read_config_multi_missing_all(self):
-        with tempfile.NamedTemporaryFile(mode='wb') as t1:
-            pass
-        with tempfile.NamedTemporaryFile(mode='wb') as t2:
-            pass
-        self.assertRaises(config_exception.ConfigException,
-                          apply_config.read_config, [t1.name, t2.name])
-
     def test_strip_hash(self):
         h = {'a': {'b': {'x': 'y'}}, "c": [1, 2, 3]}
         self.assertEqual(apply_config.strip_hash(h, 'a.b'), {'x': 'y'})

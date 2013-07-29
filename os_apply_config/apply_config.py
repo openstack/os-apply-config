@@ -23,6 +23,7 @@ import tempfile
 
 from pystache import context
 
+from os_apply_config import collect_config
 from os_apply_config import config_exception as exc
 from os_apply_config import renderers
 from os_apply_config import value_types
@@ -35,9 +36,11 @@ if TEMPLATES_DIR is None:
         TEMPLATES_DIR = '/opt/stack/os-config-applier/templates'
 
 
-def install_config(config_path, template_root,
-                   output_path, validate, subhash=None):
-    config = strip_hash(read_config(config_path), subhash)
+def install_config(
+        config_path, template_root, output_path, validate, subhash=None,
+        fallback_metadata=None):
+    config = strip_hash(
+        collect_config.collect_config(config_path, fallback_metadata), subhash)
     tree = build_tree(template_paths(template_root), config)
     if not validate:
         for path, contents in tree.items():
@@ -45,8 +48,9 @@ def install_config(config_path, template_root,
                 output_path, strip_prefix('/', path)), contents)
 
 
-def print_key(config_path, key, type_name, default=None):
-    config = read_config(config_path)
+def print_key(
+        config_path, key, type_name, default=None, fallback_metadata=None):
+    config = collect_config.collect_config(config_path, fallback_metadata)
     keys = key.split('.')
     for key in keys:
         try:
@@ -119,16 +123,6 @@ def render_executable(path, config):
     return stdout
 
 
-def read_config(paths):
-    for path in paths:
-        if os.path.exists(path):
-            try:
-                return json.loads(open(path).read())
-            except Exception:
-                raise exc.ConfigException("invalid metadata file: %s" % path)
-    raise exc.ConfigException("No metadata found.")
-
-
 def template_paths(root):
     res = []
     for cur_root, subdirs, files in os.walk(root):
@@ -157,7 +151,12 @@ def strip_hash(h, keys):
 
 
 def parse_opts(argv):
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description='Reads and merges JSON configuration files specified'
+        ' by colon separated environment variable OS_CONFIG_FILES, unless'
+        ' overridden by command line option --metadata. If no files are'
+        ' specified this way, falls back to legacy behavior of searching'
+        ' the fallback metadata path for a single config file.')
     parser.add_argument('-t', '--templates', metavar='TEMPLATE_ROOT',
                         help="""path to template root directory (default:
                         %(default)s)""",
@@ -166,8 +165,13 @@ def parse_opts(argv):
                         help='root directory for output (default:%(default)s)',
                         default='/')
     parser.add_argument('-m', '--metadata', metavar='METADATA_FILE', nargs='*',
-                        help='path to metadata files. First one that exists'
-                        ' will be used. (default: %(default)s)',
+                        help='Overrides environment variable OS_CONFIG_FILES.'
+                        ' Specify multiple times, rather than separate files'
+                        ' with ":".',
+                        default=[])
+    parser.add_argument('--fallback-metadata', metavar='FALLBACK_METADATA',
+                        nargs='*', help='Files to search when OS_CONFIG_FILES'
+                        'is empty. (default: %(default)s)',
                         default=['/var/cache/heat-cfntools/last_metadata',
                                  '/var/lib/heat-cfntools/cfn-init-data',
                                  '/var/lib/cloud/data/cfn-init-data'])
@@ -204,6 +208,10 @@ def main(argv=sys.argv):
         print(opts.templates)
         return 0
 
+    if not opts.metadata:
+        if 'OS_CONFIG_FILES' in os.environ:
+            opts.metadata = os.environ['OS_CONFIG_FILES'].split(':')
+
     try:
         if opts.templates is None:
             raise exc.ConfigException('missing option --templates')
@@ -212,10 +220,11 @@ def main(argv=sys.argv):
             print_key(opts.metadata,
                       opts.key,
                       opts.type,
-                      opts.key_default)
+                      opts.key_default,
+                      opts.fallback_metadata)
         else:
             install_config(opts.metadata, opts.templates, opts.output,
-                           opts.validate, opts.subhash)
+                           opts.validate, opts.subhash, opts.fallback_metadata)
             logger.info("success")
     except exc.ConfigException as e:
         logger.error(e)

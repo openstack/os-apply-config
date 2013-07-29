@@ -6,7 +6,7 @@ Apply configuration from cloud metadata (JSON).
 
 # What does it do?
 
-It turns a cloud-metadata file like this:
+It turns metadata from one or more JSON files like this:
 ```javascript
 {"keystone": {"database": {"host": "127.0.0.1", "user": "keystone", "password": "foobar"}}}
 ```
@@ -23,6 +23,29 @@ Just pass it the path to a directory tree of templates:
 ```
 sudo os-apply-config -t /home/me/my_templates
 ```
+
+By default it will read config files according to the environment variable
+OS_CONFIG_FILES. The paths are expected to be colon, ":", separated, and should
+refer to json files which have a mapping as their root structure. Keys
+in files mentioned later in the list will override keys in earlier files
+from this list.
+
+```
+OS_CONFIG_FILES=/tmp/ec2.json:/tmp/cfn.json os-apply-config
+```
+
+This will read ec2.json and cfn.json, and if they have any
+overlapping keys, the value from cfn.json will be used. That will
+populate the tree for any templates found in the template path. See
+https://github.com/stackforge/os-collect-config for a program that will
+automatically collect data and populate this list.
+
+You can also override OS_CONFIG_FILES with the --metadata command line
+option, specifying it multiple times instead of colon separating the list.
+
+Os-apply-config will also always try to read metadata in the old
+legacy paths first to populate the tree. These paths can be changed
+with --fallback-metadata.
 
 # Templates
 

@@ -24,19 +24,15 @@ from os_apply_config import config_exception as exc
 
 
 class OCCTestCase(testtools.TestCase):
-
-    def setUp(self):
-        super(OCCTestCase, self).setUp()
-        self.tdir = self.useFixture(fixtures.TempDir())
-
     def test_collect_config(self):
         conflict_configs = [('ec2', {'local-ipv4': '192.0.2.99',
                                      'instance-id': 'feeddead'}),
                             ('cfn', {'foo': {'bar': 'foo-bar'},
                                      'local-ipv4': '198.51.100.50'})]
         config_files = []
+        tdir = self.useFixture(fixtures.TempDir())
         for name, config in conflict_configs:
-            path = os.path.join(self.tdir.path, '%s.json' % name)
+            path = os.path.join(tdir.path, '%s.json' % name)
             with open(path, 'w') as out:
                 out.write(json.dumps(config))
             config_files.append(path)
@@ -47,14 +43,15 @@ class OCCTestCase(testtools.TestCase):
              'foo': {'bar': 'foo-bar'}}, config)
 
     def test_collect_config_fallback(self):
-        with open(os.path.join(self.tdir.path, 'does_exist.json'), 'w') as t:
+        tdir = self.useFixture(fixtures.TempDir())
+        with open(os.path.join(tdir.path, 'does_exist.json'), 'w') as t:
             t.write(json.dumps({'a': 1}))
-        noexist_path = os.path.join(self.tdir.path, 'does_not_exist.json')
+        noexist_path = os.path.join(tdir.path, 'does_not_exist.json')
+
         config = collect_config.collect_config([], [noexist_path, t.name])
         self.assertEquals({'a': 1}, config)
 
-        with open(os.path.join(self.tdir.path,
-                               'does_exist_new.json'), 'w') as t2:
+        with open(os.path.join(tdir.path, 'does_exist_new.json'), 'w') as t2:
             t2.write(json.dumps({'a': 2}))
 
         config = collect_config.collect_config([t2.name], [t.name])
@@ -62,12 +59,14 @@ class OCCTestCase(testtools.TestCase):
 
         config = collect_config.collect_config([], [t.name, noexist_path])
         self.assertEquals({'a': 1}, config)
-        self.assertEquals(
-            {}, collect_config.collect_config([], [noexist_path]))
-        self.assertEquals({}, collect_config.collect_config([]))
+        self.assertEquals({},
+                          collect_config.collect_config([], [noexist_path]))
+        self.assertEquals({},
+                          collect_config.collect_config([]))
 
     def test_failed_read(self):
-        unreadable_path = os.path.join(self.tdir.path, 'unreadable.json')
+        tdir = self.useFixture(fixtures.TempDir())
+        unreadable_path = os.path.join(tdir.path, 'unreadable.json')
         with open(unreadable_path, 'w') as u:
             u.write(json.dumps({}))
         os.chmod(unreadable_path, 0o000)
@@ -76,7 +75,8 @@ class OCCTestCase(testtools.TestCase):
             lambda: list(collect_config.read_configs([unreadable_path])))
 
     def test_bad_json(self):
-        bad_json_path = os.path.join(self.tdir.path, 'bad.json')
+        tdir = self.useFixture(fixtures.TempDir())
+        bad_json_path = os.path.join(tdir.path, 'bad.json')
         self.assertRaises(
             exc.ConfigException,
             lambda: list(collect_config.parse_configs([('{', bad_json_path)])))
