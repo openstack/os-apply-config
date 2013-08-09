@@ -65,5 +65,5 @@ def merge_configs(parsed_configs):
 def collect_config(os_config_files, fallback_paths=None):
     '''Convenience method to read, parse, and merge all paths.'''
     if fallback_paths:
-        os_config_files += fallback_paths
+        os_config_files = fallback_paths + os_config_files
     return merge_configs(parse_configs(read_configs(os_config_files)))

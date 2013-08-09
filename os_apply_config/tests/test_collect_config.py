@@ -52,6 +52,14 @@ class OCCTestCase(testtools.TestCase):
         noexist_path = os.path.join(self.tdir.path, 'does_not_exist.json')
         config = collect_config.collect_config([], [noexist_path, t.name])
         self.assertEquals({'a': 1}, config)
+
+        with open(os.path.join(self.tdir.path,
+                               'does_exist_new.json'), 'w') as t2:
+            t2.write(json.dumps({'a': 2}))
+
+        config = collect_config.collect_config([t2.name], [t.name])
+        self.assertEquals({'a': 2}, config)
+
         config = collect_config.collect_config([], [t.name, noexist_path])
         self.assertEquals({'a': 1}, config)
         self.assertEquals(
