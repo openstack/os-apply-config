@@ -37,7 +37,7 @@ OS_CONFIG_FILES=/tmp/ec2.json:/tmp/cfn.json os-apply-config
 This will read ec2.json and cfn.json, and if they have any
 overlapping keys, the value from cfn.json will be used. That will
 populate the tree for any templates found in the template path. See
-https://github.com/stackforge/os-collect-config for a program that will
+https://github.com/openstack/os-collect-config for a program that will
 automatically collect data and populate this list.
 
 You can also override OS_CONFIG_FILES with the --metadata command line
@@ -119,10 +119,10 @@ puts Mustache.render(template, params)
 # Quick Start
 ```bash
 # install it
-sudo pip install -U git+git://github.com/stackforge/os-config-applier.git
+sudo pip install -U git+git://github.com/openstack/os-config-applier.git
 
 # grab example templates
-git clone git://github.com/stackforge/triple-image-elements /tmp/config
+git clone git://github.com/openstack/triple-image-elements /tmp/config
 
 # run it
 os-apply-config -t /tmp/config/elements/nova/os-config-applier/ -m /tmp/config/elements/boot-stack/config.json -o /tmp/config_output
