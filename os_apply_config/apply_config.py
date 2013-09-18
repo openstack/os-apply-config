@@ -27,6 +27,7 @@ from os_apply_config import collect_config
 from os_apply_config import config_exception as exc
 from os_apply_config import renderers
 from os_apply_config import value_types
+from os_apply_config import version
 
 TEMPLATES_DIR = os.environ.get('OS_CONFIG_APPLIER_TEMPLATES', None)
 if TEMPLATES_DIR is None:
@@ -197,6 +198,8 @@ def parse_opts(argv):
                              ' not subject to type restrictions. If --key is'
                              ' specified and no default is specified, program'
                              ' exits with an error on missing key.')
+    parser.add_argument('--version', action='version',
+                        version=version.version_info.version_string())
     opts = parser.parse_args(argv[1:])
 
     return opts
