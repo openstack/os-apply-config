@@ -37,8 +37,8 @@ OS_CONFIG_FILES=/tmp/ec2.json:/tmp/cfn.json os-apply-config
 This will read ec2.json and cfn.json, and if they have any
 overlapping keys, the value from cfn.json will be used. That will
 populate the tree for any templates found in the template path. See
-https://github.com/openstack/os-collect-config for a program that will
-automatically collect data and populate this list.
+https://git.openstack.org/cgit/openstack/os-collect-config for a program
+that will automatically collect data and populate this list.
 
 You can also override OS_CONFIG_FILES with the --metadata command line
 option, specifying it multiple times instead of colon separating the list.
@@ -62,7 +62,7 @@ e.g.
         └── mysql.conf
 ```
 
-An example tree [can be found here](https://github.com/tripleo/openstack_config_templates).
+An example tree [can be found here](http://git.openstack.org/cgit/openstack/tripleo-image-elements/tree/elements/keystone/os-config-applier)
 
 If a template is executable it will be treated as an **executable template**.
 Otherwise, it will be treated as a **mustache template**.
@@ -119,10 +119,10 @@ puts Mustache.render(template, params)
 # Quick Start
 ```bash
 # install it
-sudo pip install -U git+git://github.com/openstack/os-config-applier.git
+sudo pip install -U git+git://git.openstack.org/openstack/os-apply-config.git
 
 # grab example templates
-git clone git://github.com/openstack/triple-image-elements /tmp/config
+git clone git://git.openstack.org/openstack/tripleo-image-elements /tmp/config
 
 # run it
 os-apply-config -t /tmp/config/elements/nova/os-config-applier/ -m /tmp/config/elements/boot-stack/config.json -o /tmp/config_output
