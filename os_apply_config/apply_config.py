@@ -35,6 +35,8 @@ if TEMPLATES_DIR is None:
     if not os.path.isdir(TEMPLATES_DIR):
         # Backwards compat with the old name.
         TEMPLATES_DIR = '/opt/stack/os-config-applier/templates'
+OS_CONFIG_FILES_PATH = os.environ.get(
+    'OS_CONFIG_FILES_PATH', '/var/run/os-collect-config/os_config_files.json')
 
 
 def install_config(
@@ -200,6 +202,9 @@ def parse_opts(argv):
                              ' exits with an error on missing key.')
     parser.add_argument('--version', action='version',
                         version=version.version_info.version_string())
+    parser.add_argument('--os-config-files',
+                        default=OS_CONFIG_FILES_PATH,
+                        help='Set path to os_config_files.json')
     opts = parser.parse_args(argv[1:])
 
     return opts
@@ -214,6 +219,9 @@ def main(argv=sys.argv):
     if not opts.metadata:
         if 'OS_CONFIG_FILES' in os.environ:
             opts.metadata = os.environ['OS_CONFIG_FILES'].split(':')
+        else:
+            with open(opts.os_config_files) as ocf:
+                opts.metadata = json.loads(ocf.read())
 
     try:
         if opts.templates is None:

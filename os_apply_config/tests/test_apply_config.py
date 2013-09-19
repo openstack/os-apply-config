@@ -117,6 +117,22 @@ class TestRunOSConfigApplier(testtools.TestCase):
             self.stdout.read().strip(), apply_config.TEMPLATES_DIR)
         self.assertEqual('', self.logger.output)
 
+    def test_os_config_files(self):
+        with tempfile.NamedTemporaryFile() as fake_os_config_files:
+            with tempfile.NamedTemporaryFile() as fake_config:
+                fake_config.write(json.dumps(CONFIG))
+                fake_config.flush()
+                fake_os_config_files.write(json.dumps([fake_config.name]))
+                fake_os_config_files.flush()
+                apply_config.main(['os-apply-config',
+                                   '--key', 'database.url',
+                                   '--type', 'raw',
+                                   '--os-config-files',
+                                   fake_os_config_files.name])
+                self.stdout.seek(0)
+                self.assertEqual(
+                    CONFIG['database']['url'], self.stdout.read().strip())
+
 
 class OSConfigApplierTestCase(testtools.TestCase):
 
