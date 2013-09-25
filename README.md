@@ -66,7 +66,7 @@ e.g.
         └── mysql.conf
 ```
 
-An example tree [can be found here](http://git.openstack.org/cgit/openstack/tripleo-image-elements/tree/elements/keystone/os-config-applier)
+An example tree [can be found here](http://git.openstack.org/cgit/openstack/tripleo-image-elements/tree/elements/keystone/os-apply-config)
 
 If a template is executable it will be treated as an **executable template**.
 Otherwise, it will be treated as a **mustache template**.
