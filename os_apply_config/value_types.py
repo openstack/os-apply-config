@@ -20,7 +20,7 @@ from config_exception import ConfigException
 TYPES = {
     "int": "^[0-9]+$",
     "default": "^[A-Za-z0-9_]*$",
-    "netaddress": "^[A-Za-z0-9/.:-]+$",
+    "netaddress": "^[A-Za-z0-9/.:-]*$",
     "dsn": "(?#driver)^[a-zA-Z0-9]+://"
            "(?#username[:password])([a-zA-Z0-9+_-]+(:[^@]+)?)?"
            "(?#@host or file)(@?[a-zA-Z0-9/_.-]+)?"
