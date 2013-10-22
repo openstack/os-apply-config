@@ -65,7 +65,7 @@ def print_key(
             else:
                 raise exc.ConfigException(
                     'key %s does not exist in %s' % (key, config_path))
-    value_types.ensure_type(config, type_name)
+    value_types.ensure_type(str(config), type_name)
     print(str(config))
 
 
