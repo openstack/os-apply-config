@@ -176,6 +176,26 @@ class OSConfigApplierTestCase(testtools.TestCase):
             assert os.path.exists(full_path)
             self.assertEqual(open(full_path).read(), contents)
 
+    def test_respect_file_permissions(self):
+        fd, path = tempfile.mkstemp()
+        with os.fdopen(fd, 'w') as t:
+            t.write(json.dumps(CONFIG))
+            t.flush()
+        tmpdir = tempfile.mkdtemp()
+        template = "/etc/keystone/keystone.conf"
+        target_file = os.path.join(tmpdir, template[1:])
+        os.makedirs(os.path.dirname(target_file))
+        # File dosen't exist, use the default mode (644)
+        apply_config.install_config([path], TEMPLATES, tmpdir, False)
+        self.assertEqual(os.stat(target_file).st_mode, 0o100644)
+        self.assertEqual(open(target_file).read(), OUTPUT[template])
+        # Set a different mode:
+        os.chmod(target_file, 0o600)
+        apply_config.install_config([path], TEMPLATES, tmpdir, False)
+        # The permissions should be preserved
+        self.assertEqual(os.stat(target_file).st_mode, 0o100600)
+        self.assertEqual(open(target_file).read(), OUTPUT[template])
+
     def test_build_tree(self):
         self.assertEqual(apply_config.build_tree(
             apply_config.template_paths(TEMPLATES), CONFIG), OUTPUT)
