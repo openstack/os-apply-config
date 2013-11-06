@@ -37,7 +37,7 @@ class OCCTestCase(testtools.TestCase):
                 out.write(json.dumps(config))
             config_files.append(path)
         config = collect_config.collect_config(config_files)
-        self.assertEquals(
+        self.assertEqual(
             {'local-ipv4': '198.51.100.50',
              'instance-id': 'feeddead',
              'foo': {'bar': 'foo-bar'}}, config)
@@ -49,20 +49,20 @@ class OCCTestCase(testtools.TestCase):
         noexist_path = os.path.join(tdir.path, 'does_not_exist.json')
 
         config = collect_config.collect_config([], [noexist_path, t.name])
-        self.assertEquals({'a': 1}, config)
+        self.assertEqual({'a': 1}, config)
 
         with open(os.path.join(tdir.path, 'does_exist_new.json'), 'w') as t2:
             t2.write(json.dumps({'a': 2}))
 
         config = collect_config.collect_config([t2.name], [t.name])
-        self.assertEquals({'a': 2}, config)
+        self.assertEqual({'a': 2}, config)
 
         config = collect_config.collect_config([], [t.name, noexist_path])
-        self.assertEquals({'a': 1}, config)
-        self.assertEquals({},
-                          collect_config.collect_config([], [noexist_path]))
-        self.assertEquals({},
-                          collect_config.collect_config([]))
+        self.assertEqual({'a': 1}, config)
+        self.assertEqual({},
+                         collect_config.collect_config([], [noexist_path]))
+        self.assertEqual({},
+                         collect_config.collect_config([]))
 
     def test_failed_read(self):
         tdir = self.useFixture(fixtures.TempDir())
@@ -88,29 +88,29 @@ class TestMergeConfigs(testtools.TestCase):
         noconflict_configs = [{'a': '1'},
                               {'b': 'Y'}]
         result = collect_config.merge_configs(noconflict_configs)
-        self.assertEquals({'a': '1',
-                           'b': 'Y'}, result)
+        self.assertEqual({'a': '1',
+                          'b': 'Y'}, result)
 
     def test_merge_configs_conflict(self):
         conflict_configs = [{'a': '1'}, {'a': 'Z'}]
         result = collect_config.merge_configs(conflict_configs)
-        self.assertEquals({'a': 'Z'}, result)
+        self.assertEqual({'a': 'Z'}, result)
 
     def test_merge_configs_deep_conflict(self):
         deepconflict_conf = [{'a': '1'},
                              {'b': {'x': 'foo-bar', 'y': 'tribbles'}},
                              {'b': {'x': 'shazam'}}]
         result = collect_config.merge_configs(deepconflict_conf)
-        self.assertEquals({'a': '1',
-                           'b': {'x': 'shazam', 'y': 'tribbles'}}, result)
+        self.assertEqual({'a': '1',
+                          'b': {'x': 'shazam', 'y': 'tribbles'}}, result)
 
     def test_merge_configs_type_conflict(self):
         type_conflict = [{'a': 1}, {'a': [7, 8, 9]}]
         result = collect_config.merge_configs(type_conflict)
-        self.assertEquals({'a': [7, 8, 9]}, result)
+        self.assertEqual({'a': [7, 8, 9]}, result)
 
     def test_merge_configs_list_conflict(self):
         list_conflict = [{'a': [1, 2, 3]},
                          {'a': [4, 5, 6]}]
         result = collect_config.merge_configs(list_conflict)
-        self.assertEquals({'a': [4, 5, 6]}, result)
+        self.assertEqual({'a': [4, 5, 6]}, result)
