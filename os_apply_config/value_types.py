@@ -26,6 +26,7 @@ TYPES = {
            "(?#@host or file)(@?[a-zA-Z0-9/_.-]+)?"
            "(?#/dbname)(/[a-zA-Z0-9_-]+)?"
            "(?#?variable=value)(\?[a-zA-Z0-9=_-]+)?$",
+    "swiftdevices": "^(r\d+z\d+-[A-Za-z0-9.-_]+:%PORT%/[^,]+,?)+$",
     "raw": ""
 }
 
