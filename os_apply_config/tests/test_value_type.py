@@ -99,3 +99,29 @@ class ValueTypeTestCase(testtools.TestCase):
                           value_types.ensure_type,
                           "mysql://user:pass@host/db?charset=utf8;DROP TABLE "
                           "foo", 'dsn')
+
+    def test_swiftdevices_single(self):
+        test_swiftdevices = 'r1z1-127.0.0.1:%PORT%/d1'
+        self.assertEqual(test_swiftdevices, value_types.ensure_type(
+                         test_swiftdevices,
+                         'swiftdevices'))
+
+    def test_swiftdevices_multi(self):
+        test_swiftdevices = 'r1z1-127.0.0.1:%PORT%/d1,r1z1-127.0.0.1:%PORT%/d2'
+        self.assertEqual(test_swiftdevices, value_types.ensure_type(
+                         test_swiftdevices,
+                         'swiftdevices'))
+
+    def test_swiftdevices_blank(self):
+        test_swiftdevices = ''
+        self.assertRaises(config_exception.ConfigException,
+                          value_types.ensure_type,
+                          test_swiftdevices,
+                          'swiftdevices')
+
+    def test_swiftdevices_bad(self):
+        test_swiftdevices = 'rz1-127.0.0.1:%PORT%/d1'
+        self.assertRaises(config_exception.ConfigException,
+                          value_types.ensure_type,
+                          test_swiftdevices,
+                          'swiftdevices')

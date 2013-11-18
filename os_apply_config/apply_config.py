@@ -199,7 +199,7 @@ def parse_opts(argv):
     parser.add_argument('--type', default='default',
                         help='exit with error if the specified --key does not'
                              ' match type. Valid types are'
-                             ' <int|default|netaddress|dsn|raw>')
+                             ' <int|default|netaddress|dsn|swiftdevices|raw>')
     parser.add_argument('--key-default',
                         help='This option only affects running with --key.'
                              ' Print this if key is not found. This value is'
