@@ -148,7 +148,7 @@ class OSConfigApplierTestCase(testtools.TestCase):
 
     def setUp(self):
         super(OSConfigApplierTestCase, self).setUp()
-        self.useFixture(fixtures.FakeLogger('os-apply-config'))
+        self.logger = self.useFixture(fixtures.FakeLogger('os-apply-config'))
         self.useFixture(fixtures.NestedTempfile())
 
     def test_install_config(self):
@@ -208,6 +208,18 @@ class OSConfigApplierTestCase(testtools.TestCase):
             config_exception.ConfigException,
             apply_config.render_template, template(
                 "/etc/glance/script.conf"), {})
+
+    def test_render_template_bad_template(self):
+        tdir = self.useFixture(fixtures.TempDir())
+        bt_path = os.path.join(tdir.path, 'bad_template')
+        with open(bt_path, 'w') as bt:
+            bt.write("{{#foo}}bar={{bar}}{{/bar}}")
+        e = self.assertRaises(config_exception.ConfigException,
+                              apply_config.render_template,
+                              bt_path, {'foo': [{'bar':
+                                                 'abc'}]})
+        self.assertIn('could not render moustache template', str(e))
+        self.assertIn('Section end tag mismatch', self.logger.output)
 
     def test_render_moustache(self):
         self.assertEqual(apply_config.render_moustache("ab{{x.a}}cd", {

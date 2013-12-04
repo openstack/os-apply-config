@@ -105,6 +105,7 @@ def render_template(template, config):
                 "key '%s' from template '%s' does not exist in metadata file."
                 % (e.key, template))
         except Exception as e:
+            logger.error("%s", e)
             raise exc.ConfigException(
                 "could not render moustache template %s" % template)
 
