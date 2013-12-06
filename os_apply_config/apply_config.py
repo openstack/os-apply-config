@@ -135,7 +135,7 @@ def render_executable(path, config):
 
 def template_paths(root):
     res = []
-    for cur_root, subdirs, files in os.walk(root):
+    for cur_root, _subdirs, files in os.walk(root):
         for f in files:
             inout = (os.path.join(cur_root, f), os.path.join(
                 strip_prefix(root, cur_root), f))
