@@ -181,7 +181,7 @@ def parse_opts(argv):
                         default=[])
     parser.add_argument('--fallback-metadata', metavar='FALLBACK_METADATA',
                         nargs='*', help='Files to search when OS_CONFIG_FILES'
-                        'is empty. (default: %(default)s)',
+                        ' is empty. (default: %(default)s)',
                         default=['/var/cache/heat-cfntools/last_metadata',
                                  '/var/lib/heat-cfntools/cfn-init-data',
                                  '/var/lib/cloud/data/cfn-init-data'])
