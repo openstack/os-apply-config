@@ -263,3 +263,6 @@ logger.setLevel(logging.INFO)
 add_handler(logger, logging.StreamHandler())
 if os.geteuid() == 0:
     add_handler(logger, logging.FileHandler('/var/log/os-apply-config.log'))
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv))
