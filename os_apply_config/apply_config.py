@@ -217,6 +217,16 @@ def parse_opts(argv):
     return opts
 
 
+def load_list_from_json(json_file):
+    json_obj = []
+    if os.path.exists(json_file):
+        with open(json_file) as ocf:
+            json_obj = json.loads(ocf.read())
+    if not isinstance(json_obj, list):
+        raise ValueError("No list defined in json file: %s" % json_file)
+    return json_obj
+
+
 def main(argv=sys.argv):
     opts = parse_opts(argv)
     if opts.print_templates:
@@ -227,8 +237,7 @@ def main(argv=sys.argv):
         if 'OS_CONFIG_FILES' in os.environ:
             opts.metadata = os.environ['OS_CONFIG_FILES'].split(':')
         else:
-            with open(opts.os_config_files) as ocf:
-                opts.metadata = json.loads(ocf.read())
+            opts.metadata = load_list_from_json(opts.os_config_files)
 
     try:
         if opts.templates is None:
