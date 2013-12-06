@@ -133,4 +133,4 @@ Quick Start
    git clone git://git.openstack.org/openstack/tripleo-image-elements /tmp/config
 
    # run it
-   os-apply-config -t /tmp/config/elements/nova/os-config-applier/ -m /tmp/config/elements/boot-stack/config.json -o /tmp/config_output
+   os-apply-config -t /tmp/config/elements/nova/os-apply-config/ -m /tmp/config/elements/seed-stack-config/config.json -o /tmp/config_output
