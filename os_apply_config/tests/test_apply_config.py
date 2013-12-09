@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import atexit
 import json
 import os
 import tempfile
@@ -253,3 +254,32 @@ class OSConfigApplierTestCase(testtools.TestCase):
                           apply_config.strip_hash, h, 'a.nonexistent')
         self.assertRaises(config_exception.ConfigException,
                           apply_config.strip_hash, h, 'a.c')
+
+    def test_load_list_from_json(self):
+
+        def mkstemp():
+            fd, path = tempfile.mkstemp()
+            atexit.register(
+                lambda: os.path.exists(path) and os.remove(path))
+            return (fd, path)
+
+        def write_contents(fd, contents):
+            with os.fdopen(fd, 'w') as t:
+                t.write(contents)
+                t.flush()
+
+        fd, path = mkstemp()
+        load_list = apply_config.load_list_from_json
+        err = self.assertRaises(ValueError, load_list, path)
+        self.assertEqual("No JSON object could be decoded", str(err))
+        write_contents(fd, json.dumps(["/tmp/config.json"]))
+        json_obj = load_list(path)
+        self.assertEqual(["/tmp/config.json"], json_obj)
+        os.remove(path)
+        self.assertEqual([], load_list(path))
+
+        fd, path = mkstemp()
+        write_contents(fd, json.dumps({}))
+        err = self.assertRaises(ValueError, load_list, path)
+        self.assertEqual(
+            "No list defined in json file: %s" % path, str(err))
