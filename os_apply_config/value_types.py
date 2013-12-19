@@ -21,6 +21,7 @@ TYPES = {
     "int": "^[0-9]+$",
     "default": "^[A-Za-z0-9_]*$",
     "netaddress": "^[A-Za-z0-9/.:-]*$",
+    "netdevice": "^[A-Za-z0-9/.:-]*$",
     "dsn": "(?#driver)^[a-zA-Z0-9]+://"
            "(?#username[:password])([a-zA-Z0-9+_-]+(:[^@]+)?)?"
            "(?#@host or file)(@?[a-zA-Z0-9/_.-]+)?"

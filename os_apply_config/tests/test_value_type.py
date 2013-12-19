@@ -71,6 +71,23 @@ class ValueTypeTestCase(testtools.TestCase):
         self.assertRaises(config_exception.ConfigException,
                           value_types.ensure_type, "192.0.2.1;DROP TABLE foo")
 
+    def test_netdevice(self):
+        self.assertEqual('eth0',
+                         value_types.ensure_type('eth0', 'netdevice'))
+
+    def test_netdevice_dash(self):
+        self.assertEqual('br-ctlplane',
+                         value_types.ensure_type('br-ctlplane', 'netdevice'))
+
+    def test_netdevice_alias(self):
+        self.assertEqual('eth0:1',
+                         value_types.ensure_type('eth0:1', 'netdevice'))
+
+    def test_netdevice_bad(self):
+        self.assertRaises(config_exception.ConfigException,
+                          value_types.ensure_type, "br-tun; DROP TABLE bar",
+                          'netdevice')
+
     def test_dsn_nopass(self):
         test_dsn = 'mysql://user@host/db'
         self.assertEqual(test_dsn, value_types.ensure_type(test_dsn, 'dsn'))
