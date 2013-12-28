@@ -69,7 +69,8 @@ class ValueTypeTestCase(testtools.TestCase):
 
     def test_net_address_bad(self):
         self.assertRaises(config_exception.ConfigException,
-                          value_types.ensure_type, "192.0.2.1;DROP TABLE foo")
+                          value_types.ensure_type, "192.0.2.1;DROP TABLE foo",
+                          'netaddress')
 
     def test_netdevice(self):
         self.assertEqual('eth0',
