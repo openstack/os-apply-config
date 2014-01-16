@@ -26,15 +26,18 @@ Just pass it the path to a directory tree of templates::
 
     sudo os-apply-config -t /home/me/my_templates
 
-By default it will read config files according to the contents of the
-file `/var/run/os-collect-config/os_config_files.json`. This path can
-be changed with the command line switch `--os-config-files`, or the
-environment variable `OS_CONFIG_FILES_PATH`. The list can also be
-overridden with the environment variable `OS_CONFIG_FILES`.  If
-overriding with `OS_CONFIG_FILES`, the paths are expected to be colon,
-":", separated. Each json file referred to must have a mapping as
-their root structure. Keys in files mentioned later in the list will
-override keys in earlier files from this list. For example::
+By default it will read config files according to the contents of
+the file `/var/lib/os-collect-config/os_config_files.json`. In
+order to remain backward compatible it will also fall back to
+/var/run/os-collect-config/os_config_files.json, but the fallback
+path is deprecated and will be removed in a later release. The main
+path can be changed with the command line switch `--os-config-files`,
+or the environment variable `OS_CONFIG_FILES_PATH`. The list can
+also be overridden with the environment variable `OS_CONFIG_FILES`.
+If overriding with `OS_CONFIG_FILES`, the paths are expected to be colon,
+":", separated. Each json file referred to must have a mapping as their
+root structure. Keys in files mentioned later in the list will override
+keys in earlier files from this list. For example::
 
     OS_CONFIG_FILES=/tmp/ec2.json:/tmp/cfn.json os-apply-config
 
