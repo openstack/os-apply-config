@@ -143,3 +143,16 @@ class ValueTypeTestCase(testtools.TestCase):
                           value_types.ensure_type,
                           test_swiftdevices,
                           'swiftdevices')
+
+    def test_username(self):
+        for test_username in ['guest', 'guest_13-42']:
+            self.assertEqual(test_username, value_types.ensure_type(
+                             test_username,
+                             'username'))
+
+    def test_username_bad(self):
+        for test_username in ['guest`ls`', 'guest$PASSWD', 'guest 2']:
+            self.assertRaises(config_exception.ConfigException,
+                              value_types.ensure_type,
+                              test_username,
+                              'username')
