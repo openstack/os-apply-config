@@ -36,7 +36,8 @@ if TEMPLATES_DIR is None:
         # Backwards compat with the old name.
         TEMPLATES_DIR = '/opt/stack/os-config-applier/templates'
 OS_CONFIG_FILES_PATH = os.environ.get(
-    'OS_CONFIG_FILES_PATH', '/var/run/os-collect-config/os_config_files.json')
+    'OS_CONFIG_FILES_PATH', '/var/lib/os-collect-config/os_config_files.json')
+OS_CONFIG_FILES_PATH_OLD = '/var/run/os-collect-config/os_config_files.json'
 
 
 def install_config(
@@ -239,6 +240,11 @@ def main(argv=sys.argv):
             opts.metadata = os.environ['OS_CONFIG_FILES'].split(':')
         else:
             opts.metadata = load_list_from_json(opts.os_config_files)
+            if ((not opts.metadata and opts.os_config_files ==
+                 OS_CONFIG_FILES_PATH)):
+                logger.warning('DEPRECATED: falling back to %s' %
+                               OS_CONFIG_FILES_PATH_OLD)
+                opts.metadata = load_list_from_json(OS_CONFIG_FILES_PATH_OLD)
 
     try:
         if opts.templates is None:
