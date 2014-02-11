@@ -84,7 +84,7 @@ mustache template.
 Metadata settings are accessed with dot ('.') notation::
 
   [sql]
-  connection = mysql://{{keystone.database.user}}:{{keystone.database.password}@{{keystone.database.host}}/keystone
+  connection = mysql://{{keystone.database.user}}:{{keystone.database.password}}@{{keystone.database.host}}/keystone
 
 Executable Templates
 --------------------
