@@ -186,7 +186,7 @@ class OSConfigApplierTestCase(testtools.TestCase):
         template = "/etc/keystone/keystone.conf"
         target_file = os.path.join(tmpdir, template[1:])
         os.makedirs(os.path.dirname(target_file))
-        # File dosen't exist, use the default mode (644)
+        # File doesn't exist, use the default mode (644)
         apply_config.install_config([path], TEMPLATES, tmpdir, False)
         self.assertEqual(os.stat(target_file).st_mode, 0o100644)
         self.assertEqual(open(target_file).read(), OUTPUT[template])
