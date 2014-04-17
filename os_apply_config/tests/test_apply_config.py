@@ -23,7 +23,7 @@ import mock
 import testtools
 
 from os_apply_config import apply_config
-from os_apply_config import config_exception
+from os_apply_config import config_exception as exc
 
 # example template tree
 TEMPLATES = os.path.join(os.path.dirname(__file__), 'templates')
@@ -32,6 +32,7 @@ TEMPLATE_PATHS = [
     "/etc/keystone/keystone.conf",
     "/etc/control/empty",
     "/etc/control/allow_empty",
+    "/etc/control/mode",
 ]
 
 # config for example tree
@@ -63,6 +64,8 @@ OUTPUT = {
         "foo\n"),
     "/etc/control/allow_empty": apply_config.OacFile(
         "").set('allow_empty', False),
+    "/etc/control/mode": apply_config.OacFile(
+        "lorem modus\n").set('mode', 0o755),
 }
 
 
@@ -232,7 +235,7 @@ class OSConfigApplierTestCase(testtools.TestCase):
         self.assertEqual("abc\n", apply_config.render_template(template(
             "/etc/glance/script.conf"), {"x": "abc"}))
         self.assertRaises(
-            config_exception.ConfigException,
+            exc.ConfigException,
             apply_config.render_template,
             template("/etc/glance/script.conf"), {})
 
@@ -241,7 +244,7 @@ class OSConfigApplierTestCase(testtools.TestCase):
         bt_path = os.path.join(tdir.path, 'bad_template')
         with open(bt_path, 'w') as bt:
             bt.write("{{#foo}}bar={{bar}}{{/bar}}")
-        e = self.assertRaises(config_exception.ConfigException,
+        e = self.assertRaises(exc.ConfigException,
                               apply_config.render_template,
                               bt_path, {'foo': [{'bar':
                                                  'abc'}]})
@@ -263,7 +266,7 @@ class OSConfigApplierTestCase(testtools.TestCase):
 
     def test_render_executable_failure(self):
         self.assertRaises(
-            config_exception.ConfigException,
+            exc.ConfigException,
             apply_config.render_executable,
             template("/etc/glance/script.conf"), {})
 
@@ -277,9 +280,9 @@ class OSConfigApplierTestCase(testtools.TestCase):
     def test_strip_hash(self):
         h = {'a': {'b': {'x': 'y'}}, "c": [1, 2, 3]}
         self.assertEqual({'x': 'y'}, apply_config.strip_hash(h, 'a.b'))
-        self.assertRaises(config_exception.ConfigException,
+        self.assertRaises(exc.ConfigException,
                           apply_config.strip_hash, h, 'a.nonexistent')
-        self.assertRaises(config_exception.ConfigException,
+        self.assertRaises(exc.ConfigException,
                           apply_config.strip_hash, h, 'a.c')
 
     def test_load_list_from_json(self):
@@ -328,3 +331,31 @@ class OSConfigApplierTestCase(testtools.TestCase):
         with mock.patch('os.path.isdir', lambda x: (x == default or
                                                     x == deprecated)):
             self.assertEqual(default, apply_config.templates_dir())
+
+    def test_control_mode(self):
+        path = self.write_config(CONFIG)
+        tmpdir = tempfile.mkdtemp()
+        template = "/etc/control/mode"
+        target_file = os.path.join(tmpdir, template[1:])
+        apply_config.install_config([path], TEMPLATES, tmpdir, False)
+        self.assertEqual(0o100755, os.stat(target_file).st_mode)
+
+    def test_control_mode_string(self):
+        oac_file = apply_config.OacFile('')
+        mode = '0644'
+        try:
+            oac_file.mode = mode
+        except exc.ConfigException as e:
+            self.assertIn("mode '%s' is not numeric" % mode, str(e))
+
+    def test_control_mode_range(self):
+        oac_file = apply_config.OacFile('')
+        for mode in [-1, 0o1000]:
+            try:
+                oac_file.mode = mode
+            except exc.ConfigException as e:
+                self.assertTrue("mode '%#o' out of range" % mode in str(e),
+                                "mode: %#o" % mode)
+
+        for mode in [0, 0o777]:
+            oac_file.mode = mode
