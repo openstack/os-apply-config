@@ -29,12 +29,35 @@ from os_apply_config import renderers
 from os_apply_config import value_types
 from os_apply_config import version
 
-TEMPLATES_DIR = os.environ.get('OS_CONFIG_APPLIER_TEMPLATES', None)
-if TEMPLATES_DIR is None:
-    TEMPLATES_DIR = '/opt/stack/os-apply-config/templates'
-    if not os.path.isdir(TEMPLATES_DIR):
-        # Backwards compat with the old name.
-        TEMPLATES_DIR = '/opt/stack/os-config-applier/templates'
+DEFAULT_TEMPLATES_DIR = '/usr/libexec/os-apply-config/templates'
+
+
+def templates_dir():
+    """Determine the default templates directory path
+
+    If the OS_CONFIG_APPLIER_TEMPLATES environment variable has been set,
+    use its value.
+    Otherwise, select a default path based on which directories exist on the
+    system, preferring the newer paths but still allowing the old ones for
+    backwards compatibility.
+    """
+    templates_dir = os.environ.get('OS_CONFIG_APPLIER_TEMPLATES', None)
+    if templates_dir is None:
+        templates_dir = '/opt/stack/os-apply-config/templates'
+        if not os.path.isdir(templates_dir):
+            # Backwards compat with the old name.
+            templates_dir = '/opt/stack/os-config-applier/templates'
+        if (os.path.isdir(templates_dir) and
+                not os.path.isdir(DEFAULT_TEMPLATES_DIR)):
+            logging.warning('Template directory %s is deprecated.  The '
+                            'recommended location for template files is %s',
+                            templates_dir, DEFAULT_TEMPLATES_DIR)
+        else:
+            templates_dir = DEFAULT_TEMPLATES_DIR
+    return templates_dir
+
+
+TEMPLATES_DIR = templates_dir()
 OS_CONFIG_FILES_PATH = os.environ.get(
     'OS_CONFIG_FILES_PATH', '/var/lib/os-collect-config/os_config_files.json')
 OS_CONFIG_FILES_PATH_OLD = '/var/run/os-collect-config/os_config_files.json'

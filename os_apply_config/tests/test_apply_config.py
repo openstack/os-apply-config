@@ -19,6 +19,7 @@ import os
 import tempfile
 
 import fixtures
+import mock
 import testtools
 
 from os_apply_config import apply_config
@@ -283,3 +284,25 @@ class OSConfigApplierTestCase(testtools.TestCase):
         err = self.assertRaises(ValueError, load_list, path)
         self.assertEqual(
             "No list defined in json file: %s" % path, str(err))
+
+    def test_default_templates_dir_current(self):
+        default = '/usr/libexec/os-apply-config/templates'
+        with mock.patch('os.path.isdir', lambda x: x == default):
+            self.assertEqual(default, apply_config.templates_dir())
+
+    def test_default_templates_dir_deprecated(self):
+        default = '/opt/stack/os-apply-config/templates'
+        with mock.patch('os.path.isdir', lambda x: x == default):
+            self.assertEqual(default, apply_config.templates_dir())
+
+    def test_default_templates_dir_old_deprecated(self):
+        default = '/opt/stack/os-config-applier/templates'
+        with mock.patch('os.path.isdir', lambda x: x == default):
+            self.assertEqual(default, apply_config.templates_dir())
+
+    def test_default_templates_dir_both(self):
+        default = '/usr/libexec/os-apply-config/templates'
+        deprecated = '/opt/stack/os-apply-config/templates'
+        with mock.patch('os.path.isdir', lambda x: (x == default or
+                                                    x == deprecated)):
+            self.assertEqual(default, apply_config.templates_dir())
