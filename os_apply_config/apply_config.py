@@ -82,7 +82,7 @@ def print_key(
     for key in keys:
         try:
             config = config[key]
-        except KeyError:
+        except (KeyError,TypeError):
             if default is not None:
                 print(str(default))
                 return
