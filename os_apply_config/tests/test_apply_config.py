@@ -37,17 +37,17 @@ CONFIG = {
     "x": "foo",
     "y": False,
     "database": {
-    "url": "sqlite:///blah"
+        "url": "sqlite:///blah"
     }
 }
 
 # config for example tree - with subhash
 CONFIG_SUBHASH = {
     "OpenStack::Config": {
-    "x": "foo",
-    "database": {
-        "url": "sqlite:///blah"
-    }
+        "x": "foo",
+        "database": {
+            "url": "sqlite:///blah"
+        }
     }
 }
 
