@@ -64,11 +64,11 @@ example::
 
    ~/my_templates$ tree
    .
-   └── etc
-       ├── keystone
-       │    └── keystone.conf
-       └── mysql
-             └── mysql.conf
+   +-- etc
+       +-- keystone
+       |    +-- keystone.conf
+       +-- mysql
+             +-- mysql.conf
 
 An example tree can be found `here <http://git.openstack.org/cgit/openstack/tripleo-image-elements/tree/elements/keystone/os-apply-config>`_.
 

@@ -132,9 +132,10 @@ class TestRunOSConfigApplier(testtools.TestCase):
     def test_os_config_files(self):
         with tempfile.NamedTemporaryFile() as fake_os_config_files:
             with tempfile.NamedTemporaryFile() as fake_config:
-                fake_config.write(json.dumps(CONFIG))
+                fake_config.write(json.dumps(CONFIG).encode('utf-8'))
                 fake_config.flush()
-                fake_os_config_files.write(json.dumps([fake_config.name]))
+                fake_os_config_files.write(
+                    json.dumps([fake_config.name]).encode('utf-8'))
                 fake_os_config_files.flush()
                 apply_config.main(['os-apply-config',
                                    '--key', 'database.url',
@@ -242,7 +243,7 @@ class OSConfigApplierTestCase(testtools.TestCase):
             template("/etc/glance/script.conf"), {})
 
     def test_template_paths(self):
-        expected = map(lambda p: (template(p), p), TEMPLATE_PATHS)
+        expected = list(map(lambda p: (template(p), p), TEMPLATE_PATHS))
         actual = apply_config.template_paths(TEMPLATES)
         expected.sort(key=lambda tup: tup[1])
         actual.sort(key=lambda tup: tup[1])

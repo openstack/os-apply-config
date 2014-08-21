@@ -103,6 +103,8 @@ def write_file(path, contents):
     d = os.path.dirname(path)
     os.path.exists(d) or os.makedirs(d)
     with tempfile.NamedTemporaryFile(dir=d, delete=False) as newfile:
+        if type(contents) == str:
+            contents = contents.encode('utf-8')
         newfile.write(contents)
         os.chmod(newfile.name, mode)
         os.chown(newfile.name, uid, gid)
@@ -148,13 +150,13 @@ def render_executable(path, config):
                          stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate(json.dumps(config))
+    stdout, stderr = p.communicate(json.dumps(config).encode('utf-8'))
     p.wait()
     if p.returncode != 0:
         raise exc.ConfigException(
             "config script failed: %s\n\nwith output:\n\n%s" %
             (path, stdout + stderr))
-    return stdout
+    return stdout.decode('utf-8')
 
 
 def template_paths(root):
