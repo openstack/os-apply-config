@@ -272,8 +272,7 @@ class OSConfigApplierTestCase(testtools.TestCase):
 
         fd, path = mkstemp()
         load_list = apply_config.load_list_from_json
-        err = self.assertRaises(ValueError, load_list, path)
-        self.assertEqual("No JSON object could be decoded", str(err))
+        self.assertRaises(ValueError, load_list, path)
         write_contents(fd, json.dumps(["/tmp/config.json"]))
         json_obj = load_list(path)
         self.assertEqual(["/tmp/config.json"], json_obj)
@@ -282,9 +281,7 @@ class OSConfigApplierTestCase(testtools.TestCase):
 
         fd, path = mkstemp()
         write_contents(fd, json.dumps({}))
-        err = self.assertRaises(ValueError, load_list, path)
-        self.assertEqual(
-            "No list defined in json file: %s" % path, str(err))
+        self.assertRaises(ValueError, load_list, path)
 
     def test_default_templates_dir_current(self):
         default = '/usr/libexec/os-apply-config/templates'
