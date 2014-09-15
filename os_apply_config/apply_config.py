@@ -22,6 +22,8 @@ import sys
 import tempfile
 
 from pystache import context
+import six
+import yaml
 
 from os_apply_config import collect_config
 from os_apply_config import config_exception as exc
@@ -62,6 +64,62 @@ OS_CONFIG_FILES_PATH = os.environ.get(
     'OS_CONFIG_FILES_PATH', '/var/lib/os-collect-config/os_config_files.json')
 OS_CONFIG_FILES_PATH_OLD = '/var/run/os-collect-config/os_config_files.json'
 
+CONTROL_FILE_SUFFIX = ".oac"
+
+
+class OacFile(object):
+    DEFAULTS = {
+        'allow_empty': True
+    }
+
+    def __init__(self, body, **kwargs):
+        super(OacFile, self).__init__()
+        self.body = body
+
+        for k, v in six.iteritems(self.DEFAULTS):
+            setattr(self, '_' + k, v)
+
+        for k, v in six.iteritems(kwargs):
+            if not hasattr(self, k):
+                raise exc.ConfigException(
+                    "unrecognised file control key '%s'" % (k))
+            setattr(self, k, v)
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.__dict__ == other.__dict__
+        return False
+
+    def __repr__(self):
+        a = ["OacFile(%s" % repr(self.body)]
+        for key, default in six.iteritems(self.DEFAULTS):
+            value = getattr(self, key)
+            if value != default:
+                a.append("%s=%s" % (key, repr(value)))
+        return ", ".join(a) + ")"
+
+    def set(self, key, value):
+        """Allows setting attrs as an expression rather than a statement."""
+        setattr(self, key, value)
+        return self
+
+    @property
+    def allow_empty(self):
+        """Returns allow_empty.
+
+        If True and body='', no file will be created and any existing
+        file will be deleted.
+        """
+        return self._allow_empty
+
+    @allow_empty.setter
+    def allow_empty(self, value):
+        if type(value) is not bool:
+            raise exc.ConfigException(
+                "allow_empty requires Boolean, got: '%s'" % value)
+        self._allow_empty = value
+        return self
+
 
 def install_config(
         config_path, template_root, output_path, validate, subhash=None,
@@ -70,9 +128,9 @@ def install_config(
         collect_config.collect_config(config_path, fallback_metadata), subhash)
     tree = build_tree(template_paths(template_root), config)
     if not validate:
-        for path, contents in tree.items():
+        for path, obj in tree.items():
             write_file(os.path.join(
-                output_path, strip_prefix('/', path)), contents)
+                output_path, strip_prefix('/', path)), obj)
 
 
 def print_key(
@@ -93,7 +151,15 @@ def print_key(
     print(str(config))
 
 
-def write_file(path, contents):
+def write_file(path, obj):
+    if not obj.allow_empty and len(obj.body) == 0:
+        if os.path.exists(path):
+            logger.info("deleting %s", path)
+            os.unlink(path)
+        else:
+            logger.info("not creating empty %s", path)
+        return
+
     logger.info("writing %s", path)
     if os.path.exists(path):
         stat = os.stat(path)
@@ -103,20 +169,33 @@ def write_file(path, contents):
     d = os.path.dirname(path)
     os.path.exists(d) or os.makedirs(d)
     with tempfile.NamedTemporaryFile(dir=d, delete=False) as newfile:
-        if type(contents) == str:
-            contents = contents.encode('utf-8')
-        newfile.write(contents)
+        if type(obj.body) == str:
+            obj.body = obj.body.encode('utf-8')
+        newfile.write(obj.body)
         os.chmod(newfile.name, mode)
         os.chown(newfile.name, uid, gid)
         os.rename(newfile.name, path)
 
-# return a map of filenames->filecontents
-
 
 def build_tree(templates, config):
+    """Return a map of filenames to OacFiles."""
     res = {}
     for in_file, out_file in templates:
-        res[out_file] = render_template(in_file, config)
+        try:
+            body = render_template(in_file, config)
+            ctrl_file = in_file + CONTROL_FILE_SUFFIX
+            ctrl_dict = {}
+            if os.path.isfile(ctrl_file):
+                with open(ctrl_file) as cf:
+                    ctrl_body = cf.read()
+                ctrl_dict = yaml.safe_load(ctrl_body) or {}
+            if not isinstance(ctrl_dict, dict):
+                raise exc.ConfigException(
+                    "header is not a dict: %s" % in_file)
+            res[out_file] = OacFile(body, **ctrl_dict)
+        except exc.ConfigException as e:
+            e.args += in_file,
+            raise
     return res
 
 
@@ -163,6 +242,8 @@ def template_paths(root):
     res = []
     for cur_root, _subdirs, files in os.walk(root):
         for f in files:
+            if f.endswith(CONTROL_FILE_SUFFIX):
+                continue
             inout = (os.path.join(cur_root, f), os.path.join(
                 strip_prefix(root, cur_root), f))
             res.append(inout)

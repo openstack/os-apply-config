@@ -29,7 +29,9 @@ from os_apply_config import config_exception
 TEMPLATES = os.path.join(os.path.dirname(__file__), 'templates')
 TEMPLATE_PATHS = [
     "/etc/glance/script.conf",
-    "/etc/keystone/keystone.conf"
+    "/etc/keystone/keystone.conf",
+    "/etc/control/empty",
+    "/etc/control/allow_empty",
 ]
 
 # config for example tree
@@ -53,8 +55,14 @@ CONFIG_SUBHASH = {
 
 # expected output for example tree
 OUTPUT = {
-    "/etc/glance/script.conf": "foo\n",
-    "/etc/keystone/keystone.conf": "[foo]\ndatabase = sqlite:///blah\n"
+    "/etc/glance/script.conf": apply_config.OacFile(
+        "foo\n"),
+    "/etc/keystone/keystone.conf": apply_config.OacFile(
+        "[foo]\ndatabase = sqlite:///blah\n"),
+    "/etc/control/empty": apply_config.OacFile(
+        "foo\n"),
+    "/etc/control/allow_empty": apply_config.OacFile(
+        "").set('allow_empty', False),
 }
 
 
@@ -69,6 +77,7 @@ def template(relpath):
 
 
 class TestRunOSConfigApplier(testtools.TestCase):
+    """Tests the commandline options."""
 
     def setUp(self):
         super(TestRunOSConfigApplier, self).setUp()
@@ -154,63 +163,78 @@ class OSConfigApplierTestCase(testtools.TestCase):
         self.logger = self.useFixture(fixtures.FakeLogger('os-apply-config'))
         self.useFixture(fixtures.NestedTempfile())
 
-    def test_install_config(self):
+    def write_config(self, config):
         fd, path = tempfile.mkstemp()
         with os.fdopen(fd, 'w') as t:
-            t.write(json.dumps(CONFIG))
+            t.write(json.dumps(config))
             t.flush()
+        return path
+
+    def check_output_file(self, tmpdir, path, obj):
+        full_path = os.path.join(tmpdir, path[1:])
+        if obj.allow_empty:
+            assert os.path.exists(full_path), "%s doesn't exist" % path
+            self.assertEqual(obj.body, open(full_path).read())
+        else:
+            assert not os.path.exists(full_path), "%s exists" % path
+
+    def test_install_config(self):
+        path = self.write_config(CONFIG)
         tmpdir = tempfile.mkdtemp()
         apply_config.install_config([path], TEMPLATES, tmpdir, False)
-        for path, contents in OUTPUT.items():
-            full_path = os.path.join(tmpdir, path[1:])
-            assert os.path.exists(full_path)
-            self.assertEqual(open(full_path).read(), contents)
+        for path, obj in OUTPUT.items():
+            self.check_output_file(tmpdir, path, obj)
 
     def test_install_config_subhash(self):
-        fd, tpath = tempfile.mkstemp()
-        with os.fdopen(fd, 'w') as t:
-            t.write(json.dumps(CONFIG_SUBHASH))
-            t.flush()
+        tpath = self.write_config(CONFIG_SUBHASH)
         tmpdir = tempfile.mkdtemp()
         apply_config.install_config(
             [tpath], TEMPLATES, tmpdir, False, 'OpenStack::Config')
-        for path, contents in OUTPUT.items():
-            full_path = os.path.join(tmpdir, path[1:])
-            assert os.path.exists(full_path)
-            self.assertEqual(open(full_path).read(), contents)
+        for path, obj in OUTPUT.items():
+            self.check_output_file(tmpdir, path, obj)
+
+    def test_delete_if_not_allowed_empty(self):
+        path = self.write_config(CONFIG)
+        tmpdir = tempfile.mkdtemp()
+        template = "/etc/control/allow_empty"
+        target_file = os.path.join(tmpdir, template[1:])
+        # Touch the file
+        os.makedirs(os.path.dirname(target_file))
+        open(target_file, 'a').close()
+        apply_config.install_config([path], TEMPLATES, tmpdir, False)
+        # File should be gone
+        self.assertFalse(os.path.exists(target_file))
 
     def test_respect_file_permissions(self):
-        fd, path = tempfile.mkstemp()
-        with os.fdopen(fd, 'w') as t:
-            t.write(json.dumps(CONFIG))
-            t.flush()
+        path = self.write_config(CONFIG)
         tmpdir = tempfile.mkdtemp()
         template = "/etc/keystone/keystone.conf"
         target_file = os.path.join(tmpdir, template[1:])
         os.makedirs(os.path.dirname(target_file))
         # File doesn't exist, use the default mode (644)
         apply_config.install_config([path], TEMPLATES, tmpdir, False)
-        self.assertEqual(os.stat(target_file).st_mode, 0o100644)
-        self.assertEqual(open(target_file).read(), OUTPUT[template])
+        self.assertEqual(0o100644, os.stat(target_file).st_mode)
+        self.assertEqual(OUTPUT[template].body, open(target_file).read())
         # Set a different mode:
         os.chmod(target_file, 0o600)
         apply_config.install_config([path], TEMPLATES, tmpdir, False)
         # The permissions should be preserved
-        self.assertEqual(os.stat(target_file).st_mode, 0o100600)
-        self.assertEqual(open(target_file).read(), OUTPUT[template])
+        self.assertEqual(0o100600, os.stat(target_file).st_mode)
+        self.assertEqual(OUTPUT[template].body, open(target_file).read())
 
     def test_build_tree(self):
-        self.assertEqual(apply_config.build_tree(
-            apply_config.template_paths(TEMPLATES), CONFIG), OUTPUT)
+        tree = apply_config.build_tree(
+            apply_config.template_paths(TEMPLATES), CONFIG)
+        self.assertEqual(OUTPUT, tree)
 
     def test_render_template(self):
         # execute executable files, moustache non-executables
-        self.assertEqual(apply_config.render_template(template(
-            "/etc/glance/script.conf"), {"x": "abc"}), "abc\n")
+        self.assertEqual("abc\n", apply_config.render_template(template(
+            "/etc/glance/script.conf"), {"x": "abc"}))
         self.assertRaises(
             config_exception.ConfigException,
-            apply_config.render_template, template(
-                "/etc/glance/script.conf"), {})
+            apply_config.render_template,
+            template("/etc/glance/script.conf"), {})
 
     def test_render_template_bad_template(self):
         tdir = self.useFixture(fixtures.TempDir())
@@ -225,16 +249,17 @@ class OSConfigApplierTestCase(testtools.TestCase):
         self.assertIn('Section end tag mismatch', self.logger.output)
 
     def test_render_moustache(self):
-        self.assertEqual(apply_config.render_moustache("ab{{x.a}}cd", {
-                         "x": {"a": "123"}}), "ab123cd")
+        self.assertEqual(
+            "ab123cd",
+            apply_config.render_moustache("ab{{x.a}}cd", {"x": {"a": "123"}}))
 
     def test_render_moustache_bad_key(self):
-        self.assertEqual(apply_config.render_moustache("{{badkey}}", {}), u'')
+        self.assertEqual(u'', apply_config.render_moustache("{{badkey}}", {}))
 
     def test_render_executable(self):
         params = {"x": "foo"}
-        self.assertEqual(apply_config.render_executable(template(
-            "/etc/glance/script.conf"), params), "foo\n")
+        self.assertEqual("foo\n", apply_config.render_executable(
+            template("/etc/glance/script.conf"), params))
 
     def test_render_executable_failure(self):
         self.assertRaises(
@@ -247,18 +272,17 @@ class OSConfigApplierTestCase(testtools.TestCase):
         actual = apply_config.template_paths(TEMPLATES)
         expected.sort(key=lambda tup: tup[1])
         actual.sort(key=lambda tup: tup[1])
-        self.assertEqual(actual, expected)
+        self.assertEqual(expected, actual)
 
     def test_strip_hash(self):
         h = {'a': {'b': {'x': 'y'}}, "c": [1, 2, 3]}
-        self.assertEqual(apply_config.strip_hash(h, 'a.b'), {'x': 'y'})
+        self.assertEqual({'x': 'y'}, apply_config.strip_hash(h, 'a.b'))
         self.assertRaises(config_exception.ConfigException,
                           apply_config.strip_hash, h, 'a.nonexistent')
         self.assertRaises(config_exception.ConfigException,
                           apply_config.strip_hash, h, 'a.c')
 
     def test_load_list_from_json(self):
-
         def mkstemp():
             fd, path = tempfile.mkstemp()
             atexit.register(

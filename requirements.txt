@@ -3,3 +3,5 @@ pbr>=0.6,!=0.7,<1.0
 anyjson>=0.3.3
 argparse
 pystache
+PyYAML>=3.1.0
+six>=1.7.0
