@@ -69,7 +69,8 @@ CONTROL_FILE_SUFFIX = ".oac"
 
 class OacFile(object):
     DEFAULTS = {
-        'allow_empty': True
+        'allow_empty': True,
+        'mode': None,
     }
 
     def __init__(self, body, **kwargs):
@@ -120,6 +121,23 @@ class OacFile(object):
         self._allow_empty = value
         return self
 
+    @property
+    def mode(self):
+        """The permissions to set on the file, EG 0755."""
+        return self._mode
+
+    @mode.setter
+    def mode(self, v):
+        """Returns the file mode.
+
+        EG 0644. Must be between 0 and 0777, the sticky bit is not supported.
+        """
+        if type(v) is not int:
+            raise exc.ConfigException("mode '%s' is not numeric" % v)
+        if not 0 <= v <= 0o777:
+            raise exc.ConfigException("mode '%#o' out of range" % v)
+        self._mode = v
+
 
 def install_config(
         config_path, template_root, output_path, validate, subhash=None,
@@ -166,6 +184,8 @@ def write_file(path, obj):
         mode, uid, gid = stat.st_mode, stat.st_uid, stat.st_gid
     else:
         mode, uid, gid = 0o644, -1, -1
+    mode = obj.mode or mode
+
     d = os.path.dirname(path)
     os.path.exists(d) or os.makedirs(d)
     with tempfile.NamedTemporaryFile(dir=d, delete=False) as newfile:
