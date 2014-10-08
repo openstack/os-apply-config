@@ -158,6 +158,8 @@ def print_key(
     for key in keys:
         try:
             config = config[key]
+            if config is None:
+                raise TypeError()
         except (KeyError, TypeError):
             if default is not None:
                 print(str(default))
