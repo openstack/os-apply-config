@@ -24,6 +24,7 @@ import testtools
 
 from os_apply_config import apply_config
 from os_apply_config import config_exception as exc
+from os_apply_config import oac_file
 
 # example template tree
 TEMPLATES = os.path.join(os.path.dirname(__file__), 'templates')
@@ -56,15 +57,15 @@ CONFIG_SUBHASH = {
 
 # expected output for example tree
 OUTPUT = {
-    "/etc/glance/script.conf": apply_config.OacFile(
+    "/etc/glance/script.conf": oac_file.OacFile(
         "foo\n"),
-    "/etc/keystone/keystone.conf": apply_config.OacFile(
+    "/etc/keystone/keystone.conf": oac_file.OacFile(
         "[foo]\ndatabase = sqlite:///blah\n"),
-    "/etc/control/empty": apply_config.OacFile(
+    "/etc/control/empty": oac_file.OacFile(
         "foo\n"),
-    "/etc/control/allow_empty": apply_config.OacFile(
+    "/etc/control/allow_empty": oac_file.OacFile(
         "").set('allow_empty', False),
-    "/etc/control/mode": apply_config.OacFile(
+    "/etc/control/mode": oac_file.OacFile(
         "lorem modus\n").set('mode', 0o755),
 }
 
@@ -339,23 +340,3 @@ class OSConfigApplierTestCase(testtools.TestCase):
         target_file = os.path.join(tmpdir, template[1:])
         apply_config.install_config([path], TEMPLATES, tmpdir, False)
         self.assertEqual(0o100755, os.stat(target_file).st_mode)
-
-    def test_control_mode_string(self):
-        oac_file = apply_config.OacFile('')
-        mode = '0644'
-        try:
-            oac_file.mode = mode
-        except exc.ConfigException as e:
-            self.assertIn("mode '%s' is not numeric" % mode, str(e))
-
-    def test_control_mode_range(self):
-        oac_file = apply_config.OacFile('')
-        for mode in [-1, 0o1000]:
-            try:
-                oac_file.mode = mode
-            except exc.ConfigException as e:
-                self.assertTrue("mode '%#o' out of range" % mode in str(e),
-                                "mode: %#o" % mode)
-
-        for mode in [0, 0o777]:
-            oac_file.mode = mode
