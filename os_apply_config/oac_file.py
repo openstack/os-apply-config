@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import grp
+import pwd
+
 import six
 
 from os_apply_config import config_exception as exc
@@ -22,6 +25,8 @@ class OacFile(object):
     DEFAULTS = {
         'allow_empty': True,
         'mode': None,
+        'owner': None,
+        'group': None,
     }
 
     def __init__(self, body, **kwargs):
@@ -79,7 +84,7 @@ class OacFile(object):
 
     @mode.setter
     def mode(self, v):
-        """Returns the file mode.
+        """Pass in the mode to set on the file.
 
         EG 0644. Must be between 0 and 0777, the sticky bit is not supported.
         """
@@ -88,3 +93,51 @@ class OacFile(object):
         if not 0 <= v <= 0o777:
             raise exc.ConfigException("mode '%#o' out of range" % v)
         self._mode = v
+
+    @property
+    def owner(self):
+        """The UID to set on the file, EG 'rabbitmq' or '501'."""
+        return self._owner
+
+    @owner.setter
+    def owner(self, v):
+        """Pass in the UID to set on the file.
+
+        EG 'rabbitmq' or 501.
+        """
+        try:
+            if type(v) is int:
+                user = pwd.getpwuid(v)
+            elif type(v) is str:
+                user = pwd.getpwnam(v)
+            else:
+                raise exc.ConfigException(
+                    "owner '%s' must be a string or int" % v)
+        except KeyError:
+            raise exc.ConfigException(
+                "owner '%s' not found in passwd database" % v)
+        self._owner = user[2]
+
+    @property
+    def group(self):
+        """The GID to set on the file, EG 'rabbitmq' or '501'."""
+        return self._group
+
+    @group.setter
+    def group(self, v):
+        """Pass in the GID to set on the file.
+
+        EG 'rabbitmq' or 501.
+        """
+        try:
+            if type(v) is int:
+                group = grp.getgrgid(v)
+            elif type(v) is str:
+                group = grp.getgrnam(v)
+            else:
+                raise exc.ConfigException(
+                    "group '%s' must be a string or int" % v)
+        except KeyError:
+            raise exc.ConfigException(
+                "group '%s' not found in group database" % v)
+        self._group = group[2]

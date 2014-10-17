@@ -113,6 +113,10 @@ def write_file(path, obj):
     else:
         mode, uid, gid = 0o644, -1, -1
     mode = obj.mode or mode
+    if obj.owner is not None:
+        uid = obj.owner
+    if obj.group is not None:
+        gid = obj.group
 
     d = os.path.dirname(path)
     os.path.exists(d) or os.makedirs(d)
