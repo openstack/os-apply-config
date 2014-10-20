@@ -41,7 +41,8 @@ CONFIG = {
     "y": False,
     "database": {
         "url": "sqlite:///blah"
-    }
+    },
+    "l": [1, 2],
 }
 
 # config for example tree - with subhash
@@ -133,6 +134,29 @@ class TestRunOSConfigApplier(testtools.TestCase):
             ['os-apply-config.py', '--metadata', self.path, '--key',
              'x', '--type', 'int']))
         self.assertIn('cannot interpret value', self.logger.output)
+
+    def test_print_key_from_list(self):
+        self.assertEqual(0, apply_config.main(
+            ['os-apply-config.py', '--metadata', self.path, '--key',
+             'l.0', '--type', 'int']))
+        self.stdout.seek(0)
+        self.assertEqual(str(CONFIG['l'][0]),
+                         self.stdout.read().strip())
+        self.assertEqual('', self.logger.output)
+
+    def test_print_key_from_list_missing(self):
+        self.assertEqual(1, apply_config.main(
+            ['os-apply-config.py', '--metadata', self.path, '--key',
+             'l.2', '--type', 'int']))
+        self.assertIn('does not exist', self.logger.output)
+
+    def test_print_key_from_list_missing_default(self):
+        self.assertEqual(0, apply_config.main(
+            ['os-apply-config.py', '--metadata', self.path, '--key',
+             'l.2', '--type', 'int', '--key-default', '']))
+        self.stdout.seek(0)
+        self.assertEqual('', self.stdout.read().strip())
+        self.assertEqual('', self.logger.output)
 
     def test_print_templates(self):
         apply_config.main(['os-apply-config', '--print-templates'])
