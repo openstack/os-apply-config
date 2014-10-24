@@ -87,6 +87,12 @@ def print_key(
         try:
             config = config[key]
         except (KeyError, TypeError):
+            try:
+                if type(config) == list:
+                    config = config[int(key)]
+                    continue
+            except (IndexError, ValueError):
+                pass
             if default is not None:
                 print(str(default))
                 return
