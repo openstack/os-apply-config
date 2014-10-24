@@ -28,13 +28,6 @@ from os_apply_config import oac_file
 
 # example template tree
 TEMPLATES = os.path.join(os.path.dirname(__file__), 'templates')
-TEMPLATE_PATHS = [
-    "/etc/glance/script.conf",
-    "/etc/keystone/keystone.conf",
-    "/etc/control/empty",
-    "/etc/control/allow_empty",
-    "/etc/control/mode",
-]
 
 # config for example tree
 CONFIG = {
@@ -68,6 +61,17 @@ OUTPUT = {
         "").set('allow_empty', False),
     "/etc/control/mode": oac_file.OacFile(
         "lorem modus\n").set('mode', 0o755),
+}
+TEMPLATE_PATHS = OUTPUT.keys()
+
+# expected output for chown tests
+# separated out to avoid needing to mock os.chown for most tests
+CHOWN_TEMPLATES = os.path.join(os.path.dirname(__file__), 'chown_templates')
+CHOWN_OUTPUT = {
+    "owner.uid": oac_file.OacFile("lorem uido\n").set('owner', 0),
+    "owner.name": oac_file.OacFile("namo uido\n").set('owner', 0),
+    "group.gid": oac_file.OacFile("lorem gido\n").set('group', 0),
+    "group.name": oac_file.OacFile("namo gido\n").set('group', 0),
 }
 
 
@@ -364,3 +368,14 @@ class OSConfigApplierTestCase(testtools.TestCase):
         target_file = os.path.join(tmpdir, template[1:])
         apply_config.install_config([path], TEMPLATES, tmpdir, False)
         self.assertEqual(0o100755, os.stat(target_file).st_mode)
+
+    @mock.patch('os.chown')
+    def test_control_chown(self, chown_mock):
+        path = self.write_config(CONFIG)
+        tmpdir = tempfile.mkdtemp()
+        apply_config.install_config([path], CHOWN_TEMPLATES, tmpdir, False)
+        chown_mock.assert_has_calls([mock.call(mock.ANY, 0, -1),   # uid
+                                     mock.call(mock.ANY, 0, -1),   # username
+                                     mock.call(mock.ANY, -1, 0),   # gid
+                                     mock.call(mock.ANY, -1, 0)],  # groupname
+                                    any_order=True)

@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import grp
+import pwd
+
 import testtools
 
 from os_apply_config import config_exception as exc
@@ -39,3 +42,49 @@ class OacFileTestCase(testtools.TestCase):
 
         for mode in [0, 0o777]:
             oacf.mode = mode
+
+    def test_owner_positive(self):
+        oacf = oac_file.OacFile('')
+        users = pwd.getpwall()
+        for name in [user[0] for user in users]:
+            oacf.owner = name
+        for uid in [user[2] for user in users]:
+            oacf.owner = uid
+
+    def test_owner_negative(self):
+        oacf = oac_file.OacFile('')
+        try:
+            user = -1
+            oacf.owner = user
+        except exc.ConfigException as e:
+            self.assertIn(
+                "owner '%s' not found in passwd database" % user, str(e))
+        try:
+            user = "za"
+            oacf.owner = user
+        except exc.ConfigException as e:
+            self.assertIn(
+                "owner '%s' not found in passwd database" % user, str(e))
+
+    def test_group_positive(self):
+        oacf = oac_file.OacFile('')
+        groups = grp.getgrall()
+        for name in [group[0] for group in groups]:
+            oacf.group = name
+        for gid in [group[2] for group in groups]:
+            oacf.group = gid
+
+    def test_group_negative(self):
+        oacf = oac_file.OacFile('')
+        try:
+            group = -1
+            oacf.group = group
+        except exc.ConfigException as e:
+            self.assertIn(
+                "group '%s' not found in group database" % group, str(e))
+        try:
+            group = "za"
+            oacf.group = group
+        except exc.ConfigException as e:
+            self.assertIn(
+                "group '%s' not found in group database" % group, str(e))
