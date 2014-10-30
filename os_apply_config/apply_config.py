@@ -86,6 +86,8 @@ def print_key(
     for key in keys:
         try:
             config = config[key]
+            if config is None:
+                raise TypeError()
         except (KeyError, TypeError):
             try:
                 if type(config) == list:

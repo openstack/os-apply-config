@@ -33,6 +33,7 @@ TEMPLATES = os.path.join(os.path.dirname(__file__), 'templates')
 CONFIG = {
     "x": "foo",
     "y": False,
+    "z": None,
     "database": {
         "url": "sqlite:///blah"
     },
@@ -118,6 +119,14 @@ class TestRunOSConfigApplier(testtools.TestCase):
         self.stdout.seek(0)
         self.assertEqual(str(CONFIG['y']),
                          self.stdout.read().strip())
+        self.assertEqual('', self.logger.output)
+
+    def test_print_null_key(self):
+        self.assertEqual(0, apply_config.main(
+            ['os-apply-config.py', '--metadata', self.path, '--key',
+             'z', '--type', 'raw', '--key-default', '']))
+        self.stdout.seek(0)
+        self.assertEqual('', self.stdout.read().strip())
         self.assertEqual('', self.logger.output)
 
     def test_print_key_missing(self):
