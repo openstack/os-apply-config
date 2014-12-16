@@ -112,6 +112,24 @@ class TestRunOSConfigApplier(testtools.TestCase):
                          self.stdout.read().strip())
         self.assertEqual('', self.logger.output)
 
+    def test_print_key_json_dict(self):
+        self.assertEqual(0, apply_config.main(
+            ['os-apply-config.py', '--metadata', self.path, '--key',
+             'database', '--type', 'raw']))
+        self.stdout.seek(0)
+        self.assertEqual(CONFIG['database'],
+                         json.loads(self.stdout.read().strip()))
+        self.assertEqual('', self.logger.output)
+
+    def test_print_key_json_list(self):
+        self.assertEqual(0, apply_config.main(
+            ['os-apply-config.py', '--metadata', self.path, '--key',
+             'l', '--type', 'raw']))
+        self.stdout.seek(0)
+        self.assertEqual(CONFIG['l'],
+                         json.loads(self.stdout.read().strip()))
+        self.assertEqual('', self.logger.output)
+
     def test_print_non_string_key(self):
         self.assertEqual(0, apply_config.main(
             ['os-apply-config.py', '--metadata', self.path, '--key',
