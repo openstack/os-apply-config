@@ -34,6 +34,8 @@ CONFIG = {
     "x": "foo",
     "y": False,
     "z": None,
+    "btrue": True,
+    "bfalse": False,
     "database": {
         "url": "sqlite:///blah"
     },
@@ -196,6 +198,17 @@ class TestRunOSConfigApplier(testtools.TestCase):
         self.assertEqual(
             self.stdout.read().strip(), apply_config.TEMPLATES_DIR)
         self.assertEqual('', self.logger.output)
+
+    def test_boolean_key(self):
+        rcode = apply_config.main(['os-apply-config', '--metadata',
+                                   self.path, '--boolean-key', 'btrue'])
+        self.assertEqual(0, rcode)
+        rcode = apply_config.main(['os-apply-config', '--metadata',
+                                   self.path, '--boolean-key', 'bfalse'])
+        self.assertEqual(1, rcode)
+        rcode = apply_config.main(['os-apply-config', '--metadata',
+                                   self.path, '--boolean-key', 'x'])
+        self.assertEqual(-1, rcode)
 
     def test_os_config_files(self):
         with tempfile.NamedTemporaryFile() as fake_os_config_files:

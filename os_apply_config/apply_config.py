@@ -79,8 +79,7 @@ def install_config(
                 output_path, strip_prefix('/', path)), obj)
 
 
-def print_key(
-        config_path, key, type_name, default=None, fallback_metadata=None):
+def _extract_key(config_path, key, fallback_metadata=None):
     config = collect_config.collect_config(config_path, fallback_metadata)
     keys = key.split('.')
     for key in keys:
@@ -95,17 +94,36 @@ def print_key(
                     continue
             except (IndexError, ValueError):
                 pass
-            if default is not None:
-                print(str(default))
-                return
-            else:
-                raise exc.ConfigException(
-                    'key %s does not exist in %s' % (key, config_path))
+            return None
+    return config
+
+
+def print_key(
+        config_path, key, type_name, default=None, fallback_metadata=None):
+    config = collect_config.collect_config(config_path, fallback_metadata)
+    config = _extract_key(config_path, key, fallback_metadata)
+    if config is None:
+        if default is not None:
+            print(str(default))
+            return
+        else:
+            raise exc.ConfigException(
+                'key %s does not exist in %s' % (key, config_path))
     value_types.ensure_type(str(config), type_name)
     if isinstance(config, (dict, list)):
         print(json.dumps(config))
     else:
         print(str(config))
+
+
+def boolean_key(metadata, key, fallback_metadata):
+    config = _extract_key(metadata, key, fallback_metadata)
+    if not isinstance(config, bool):
+        return -1
+    if config:
+        return 0
+    else:
+        return 1
 
 
 def write_file(path, obj):
@@ -278,6 +296,12 @@ def parse_opts(argv):
                              ' not subject to type restrictions. If --key is'
                              ' specified and no default is specified, program'
                              ' exits with an error on missing key.')
+    parser.add_argument('--boolean-key',
+                        help='This option is incompatible with --key.'
+                             ' Use this to evaluate whether a value is'
+                             ' boolean true or false. The return code of the'
+                             ' command will be 0 for true, 1 for false, and -1'
+                             ' for non-boolean values.')
     parser.add_argument('--version', action='version',
                         version=version.version_info.version_string())
     parser.add_argument('--os-config-files',
@@ -325,6 +349,10 @@ def main(argv=sys.argv):
                       opts.type,
                       opts.key_default,
                       opts.fallback_metadata)
+        elif opts.boolean_key:
+            return boolean_key(opts.metadata,
+                               opts.boolean_key,
+                               opts.fallback_metadata)
         else:
             install_config(opts.metadata, opts.templates, opts.output,
                            opts.validate, opts.subhash, opts.fallback_metadata)
