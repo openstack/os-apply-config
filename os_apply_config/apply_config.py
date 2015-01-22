@@ -102,7 +102,7 @@ def print_key(
                 raise exc.ConfigException(
                     'key %s does not exist in %s' % (key, config_path))
     value_types.ensure_type(str(config), type_name)
-    if isinstance(config, (dict, list)):
+    if isinstance(config, (dict, list, bool)):
         print(json.dumps(config))
     else:
         print(str(config))
