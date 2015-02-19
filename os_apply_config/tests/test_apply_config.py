@@ -137,7 +137,7 @@ class TestRunOSConfigApplier(testtools.TestCase):
             ['os-apply-config.py', '--metadata', self.path, '--key',
              'y', '--type', 'raw']))
         self.stdout.seek(0)
-        self.assertEqual(str(CONFIG['y']),
+        self.assertEqual("false",
                          self.stdout.read().strip())
         self.assertEqual('', self.logger.output)
 
