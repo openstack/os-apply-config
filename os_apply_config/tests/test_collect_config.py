@@ -114,3 +114,8 @@ class TestMergeConfigs(testtools.TestCase):
                          {'a': [4, 5, 6]}]
         result = collect_config.merge_configs(list_conflict)
         self.assertEqual({'a': [4, 5, 6]}, result)
+
+    def test_merge_configs_empty_notdict(self):
+        list_conflict = [[], {'a': '1'}, '', None, {'b': '2'}, {}]
+        result = collect_config.merge_configs(list_conflict)
+        self.assertEqual({'a': '1', 'b': '2'}, result)

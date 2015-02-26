@@ -58,7 +58,8 @@ def merge_configs(parsed_configs):
     '''Returns deep-merged dict from passed list of dicts.'''
     final_conf = {}
     for conf in parsed_configs:
-        final_conf = _deep_merge_dict(final_conf, conf)
+        if conf:
+            final_conf = _deep_merge_dict(final_conf, conf)
     return final_conf
 
 
