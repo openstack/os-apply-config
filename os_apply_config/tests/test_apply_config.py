@@ -210,6 +210,15 @@ class TestRunOSConfigApplier(testtools.TestCase):
                                    self.path, '--boolean-key', 'x'])
         self.assertEqual(-1, rcode)
 
+    def test_boolean_key_and_key(self):
+        rcode = apply_config.main(['os-apply-config', '--metadata',
+                                   self.path, '--boolean-key', 'btrue',
+                                   '--key', 'x'])
+        self.assertEqual(0, rcode)
+        self.stdout.seek(0)
+        self.assertEqual(self.stdout.read().strip(), 'foo')
+        self.assertIn('--boolean-key ignored', self.logger.output)
+
     def test_os_config_files(self):
         with tempfile.NamedTemporaryFile() as fake_os_config_files:
             with tempfile.NamedTemporaryFile() as fake_config:

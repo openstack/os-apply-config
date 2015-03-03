@@ -339,6 +339,10 @@ def main(argv=sys.argv):
                                OS_CONFIG_FILES_PATH_OLD)
                 opts.metadata = load_list_from_json(OS_CONFIG_FILES_PATH_OLD)
 
+    if opts.key and opts.boolean_key:
+        logger.warning('--key is not compatible with --boolean-key.'
+                       ' --boolean-key ignored.')
+
     try:
         if opts.templates is None:
             raise exc.ConfigException('missing option --templates')
