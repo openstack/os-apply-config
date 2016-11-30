@@ -47,6 +47,9 @@ class OacFile(object):
             return self.__dict__ == other.__dict__
         return False
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def __repr__(self):
         a = ["OacFile(%s" % repr(self.body)]
         for key, default in six.iteritems(self.DEFAULTS):
