@@ -109,6 +109,11 @@ class TestMergeConfigs(testtools.TestCase):
         result = collect_config.merge_configs(type_conflict)
         self.assertEqual({'a': [7, 8, 9]}, result)
 
+    def test_merge_configs_nested_type_conflict(self):
+        type_conflict = [{'a': {'foo': 'bar'}}, {'a': 'shazam'}]
+        result = collect_config.merge_configs(type_conflict)
+        self.assertEqual({'a': 'shazam'}, result)
+
     def test_merge_configs_list_conflict(self):
         list_conflict = [{'a': [1, 2, 3]},
                          {'a': [4, 5, 6]}]
@@ -116,6 +121,7 @@ class TestMergeConfigs(testtools.TestCase):
         self.assertEqual({'a': [4, 5, 6]}, result)
 
     def test_merge_configs_empty_notdict(self):
-        list_conflict = [[], {'a': '1'}, '', None, {'b': '2'}, {}]
+        list_conflict = [[], {'a': '1'}, '', None, 'tacocat',
+                         {'b': '2'}, {}, 'baseball']
         result = collect_config.merge_configs(list_conflict)
         self.assertEqual({'a': '1', 'b': '2'}, result)
