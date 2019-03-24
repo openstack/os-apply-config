@@ -139,10 +139,10 @@ Quick Start
 ::
 
    # install it
-   sudo pip install -U git+git://git.openstack.org/openstack/os-apply-config.git
+   sudo pip install -U git+https://git.openstack.org/openstack/os-apply-config.git
 
    # grab example templates
-   git clone git://git.openstack.org/openstack/tripleo-image-elements /tmp/config
+   git clone https://git.openstack.org/openstack/tripleo-image-elements /tmp/config
 
    # run it
    os-apply-config -t /tmp/config/elements/nova/os-apply-config/ -m /tmp/config/elements/seed-stack-config/config.json -o /tmp/config_output
