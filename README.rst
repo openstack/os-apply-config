@@ -53,7 +53,7 @@ keys in earlier files from this list. For example::
 This will read `ec2.json` and `cfn.json`, and if they have any
 overlapping keys, the value from `cfn.json` will be used. That will
 populate the tree for any templates found in the template path. See
-https://git.openstack.org/cgit/openstack/os-collect-config for a
+https://opendev.org/openstack/os-collect-config for a
 program that will automatically collect data and populate this list.
 
 You can also override `OS_CONFIG_FILES` with the `--metadata` command
@@ -139,10 +139,10 @@ Quick Start
 ::
 
    # install it
-   sudo pip install -U git+https://git.openstack.org/openstack/os-apply-config.git
+   sudo pip install -U git+https://opendev.org/openstack/os-apply-config.git
 
    # grab example templates
-   git clone https://git.openstack.org/openstack/tripleo-image-elements /tmp/config
+   git clone https://opendev.org/openstack/tripleo-image-elements /tmp/config
 
    # run it
    os-apply-config -t /tmp/config/elements/nova/os-apply-config/ -m /tmp/config/elements/seed-stack-config/config.json -o /tmp/config_output
