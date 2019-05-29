@@ -337,6 +337,11 @@ class OSConfigApplierTestCase(testtools.TestCase):
     def test_render_moustache_bad_key(self):
         self.assertEqual(u'', apply_config.render_moustache("{{badkey}}", {}))
 
+    def test_render_moustache_none(self):
+        self.assertEqual('foo: ',
+                         apply_config.render_moustache("foo: {{foo}}",
+                                                       {'foo': None}))
+
     def test_render_executable(self):
         params = {"x": "foo"}
         self.assertEqual("foo\n", apply_config.render_executable(

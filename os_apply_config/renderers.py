@@ -38,4 +38,6 @@ class JsonRenderer(pystache.Renderer):
                                                   partials, missing_tags)
 
     def str_coerce(self, val):
+        if val is None:
+            return b''
         return json.dumps(val)
