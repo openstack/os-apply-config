@@ -11,9 +11,9 @@ Team and repository tags
 os-apply-config
 ===============
 
------------------------------------------------
+----------------------------------------------
 Apply configuration from cloud metadata (JSON)
------------------------------------------------
+----------------------------------------------
 
 What does it do?
 ================
@@ -79,7 +79,7 @@ example::
        +-- mysql
              +-- mysql.conf
 
-An example tree can be found `here <http://git.openstack.org/cgit/openstack/tripleo-image-elements/tree/elements/keystone/os-apply-config>`_.
+An example tree can be found `here <https://opendev.org/openstack/tripleo-image-elements/src/branch/master/elements/os-apply-config>`_.
 
 If a template is executable it will be treated as an *executable
 template*.  Otherwise, it will be treated as a *mustache template*.
