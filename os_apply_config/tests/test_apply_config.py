@@ -17,9 +17,9 @@ import atexit
 import json
 import os
 import tempfile
+from unittest import mock
 
 import fixtures
-import mock
 import testtools
 
 from os_apply_config import apply_config
