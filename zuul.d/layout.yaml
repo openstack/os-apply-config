@@ -5,4 +5,4 @@
       - openstack-lower-constraints-jobs
       - openstack-python-jobs
       - openstack-python3-train-jobs
-      - tripleo-multinode-container-minimal
+      - tripleo-multinode-container-minimal-pipeline
