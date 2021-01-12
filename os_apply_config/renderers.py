@@ -29,8 +29,10 @@ class JsonRenderer(pystache.Renderer):
                  partials=None,
                  missing_tags=None):
         # json would be html escaped otherwise
+        def escape_noop(u):
+            return u
         if escape is None:
-            escape = lambda u: u
+            escape = escape_noop
         return super(JsonRenderer, self).__init__(file_encoding,
                                                   string_encoding,
                                                   decode_errors, search_dirs,

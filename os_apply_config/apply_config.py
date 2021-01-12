@@ -375,6 +375,8 @@ DATE_FORMAT = '%Y/%m/%d %I:%M:%S %p'
 def add_handler(logger, handler):
     handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=DATE_FORMAT))
     logger.addHandler(handler)
+
+
 logger = logging.getLogger('os-apply-config')
 logger.setLevel(logging.INFO)
 add_handler(logger, logging.StreamHandler())
