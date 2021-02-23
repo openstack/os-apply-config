@@ -3,4 +3,3 @@
       - check-requirements
       - openstack-cover-jobs
       - openstack-python3-victoria-jobs
-      - tripleo-multinode-container-minimal
