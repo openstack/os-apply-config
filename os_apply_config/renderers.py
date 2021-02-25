@@ -30,7 +30,7 @@ class JsonRenderer(pystache.Renderer):
                  missing_tags=None):
         # json would be html escaped otherwise
         if escape is None:
-            escape = lambda u: u
+            escape = lambda u: u  # noqa E731
         return super(JsonRenderer, self).__init__(file_encoding,
                                                   string_encoding,
                                                   decode_errors, search_dirs,
