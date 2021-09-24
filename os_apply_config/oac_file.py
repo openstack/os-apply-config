@@ -16,8 +16,6 @@
 import grp
 import pwd
 
-import six
-
 from os_apply_config import config_exception as exc
 
 
@@ -33,10 +31,10 @@ class OacFile(object):
         super(OacFile, self).__init__()
         self.body = body
 
-        for k, v in six.iteritems(self.DEFAULTS):
+        for k, v in self.DEFAULTS.items():
             setattr(self, '_' + k, v)
 
-        for k, v in six.iteritems(kwargs):
+        for k, v in kwargs.items():
             if not hasattr(self, k):
                 raise exc.ConfigException(
                     "unrecognised file control key '%s'" % (k))
@@ -52,7 +50,7 @@ class OacFile(object):
 
     def __repr__(self):
         a = ["OacFile(%s" % repr(self.body)]
-        for key, default in six.iteritems(self.DEFAULTS):
+        for key, default in self.DEFAULTS.items():
             value = getattr(self, key)
             if value != default:
                 a.append("%s=%s" % (key, repr(value)))
