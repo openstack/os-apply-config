@@ -89,7 +89,7 @@ def _extract_key(config_path, key, fallback_metadata=None):
                 raise TypeError()
         except (KeyError, TypeError):
             try:
-                if type(config) == list:
+                if isinstance(config, list):
                     config = config[int(key)]
                     continue
             except (IndexError, ValueError):
@@ -150,7 +150,7 @@ def write_file(path, obj):
     d = os.path.dirname(path)
     os.path.exists(d) or os.makedirs(d)
     with tempfile.NamedTemporaryFile(dir=d, delete=False) as newfile:
-        if type(obj.body) == str:
+        if isinstance(obj.body, str):
             obj.body = obj.body.encode('utf-8')
         newfile.write(obj.body)
         os.chmod(newfile.name, mode)

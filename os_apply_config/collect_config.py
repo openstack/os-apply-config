@@ -26,7 +26,7 @@ def read_configs(config_files):
         if os.path.exists(input_path):
             try:
                 with open(input_path) as input_file:
-                    yield((input_file.read(), input_path))
+                    yield (input_file.read(), input_path)
             except IOError as e:
                 raise exc.ConfigException('Could not open %s for reading. %s' %
                                           (input_path, e))
@@ -36,7 +36,7 @@ def parse_configs(config_data):
     '''Generator yields parsed json for each item passed in config_data.'''
     for input_data, input_path in config_data:
         try:
-            yield(json.loads(input_data))
+            yield json.loads(input_data)
         except ValueError:
             raise exc.ConfigException('Could not parse metadata file: %s' %
                                       input_path)
