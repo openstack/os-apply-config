@@ -33,6 +33,11 @@ from os_apply_config import version
 
 DEFAULT_TEMPLATES_DIR = '/usr/libexec/os-apply-config/templates'
 
+LOG_FORMAT = '[%(asctime)s] [%(levelname)s] %(message)s'
+DATE_FORMAT = '%Y/%m/%d %I:%M:%S %p'
+
+logger = logging.getLogger('os-apply-config')
+
 
 def templates_dir():
     """Determine the default templates directory path
@@ -322,11 +327,22 @@ def load_list_from_json(json_file):
     return json_obj
 
 
+def add_handler(logger, handler):
+    handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=DATE_FORMAT))
+    logger.addHandler(handler)
+
+
 def main(argv=sys.argv):
     opts = parse_opts(argv)
     if opts.print_templates:
         print(opts.templates)
         return 0
+
+    logger.setLevel(logging.INFO)
+    add_handler(logger, logging.StreamHandler())
+    if os.geteuid() == 0:
+        add_handler(logger,
+                    logging.FileHandler('/var/log/os-apply-config.log'))
 
     if not opts.metadata:
         if 'OS_CONFIG_FILES' in os.environ:
@@ -365,23 +381,3 @@ def main(argv=sys.argv):
         logger.error(e)
         return 1
     return 0
-
-
-# logging
-LOG_FORMAT = '[%(asctime)s] [%(levelname)s] %(message)s'
-DATE_FORMAT = '%Y/%m/%d %I:%M:%S %p'
-
-
-def add_handler(logger, handler):
-    handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=DATE_FORMAT))
-    logger.addHandler(handler)
-
-
-logger = logging.getLogger('os-apply-config')
-logger.setLevel(logging.INFO)
-add_handler(logger, logging.StreamHandler())
-if os.geteuid() == 0:
-    add_handler(logger, logging.FileHandler('/var/log/os-apply-config.log'))
-
-if __name__ == '__main__':
-    sys.exit(main(sys.argv))
