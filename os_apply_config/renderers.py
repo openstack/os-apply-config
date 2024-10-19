@@ -33,11 +33,11 @@ class JsonRenderer(pystache.Renderer):
             return u
         if escape is None:
             escape = escape_noop
-        return super(JsonRenderer, self).__init__(file_encoding,
-                                                  string_encoding,
-                                                  decode_errors, search_dirs,
-                                                  file_extension, escape,
-                                                  partials, missing_tags)
+        return super().__init__(file_encoding,
+                                string_encoding,
+                                decode_errors, search_dirs,
+                                file_extension, escape,
+                                partials, missing_tags)
 
     def str_coerce(self, val):
         if val is None:

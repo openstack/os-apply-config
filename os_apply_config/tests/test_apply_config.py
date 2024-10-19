@@ -86,7 +86,7 @@ class TestRunOSConfigApplier(testtools.TestCase):
     """Tests the commandline options."""
 
     def setUp(self):
-        super(TestRunOSConfigApplier, self).setUp()
+        super().setUp()
         self.useFixture(fixtures.NestedTempfile())
         self.stdout = self.useFixture(fixtures.StringStream('stdout')).stream
         self.useFixture(fixtures.MonkeyPatch('sys.stdout', self.stdout))
@@ -234,7 +234,7 @@ class TestRunOSConfigApplier(testtools.TestCase):
 class OSConfigApplierTestCase(testtools.TestCase):
 
     def setUp(self):
-        super(OSConfigApplierTestCase, self).setUp()
+        super().setUp()
         self.logger = self.useFixture(fixtures.FakeLogger('os-apply-config'))
         self.useFixture(fixtures.NestedTempfile())
 
@@ -329,7 +329,7 @@ class OSConfigApplierTestCase(testtools.TestCase):
             apply_config.render_moustache("ab{{x.a}}cd", {"x": {"a": "123"}}))
 
     def test_render_moustache_bad_key(self):
-        self.assertEqual(u'', apply_config.render_moustache("{{badkey}}", {}))
+        self.assertEqual('', apply_config.render_moustache("{{badkey}}", {}))
 
     def test_render_moustache_none(self):
         self.assertEqual('foo: ',

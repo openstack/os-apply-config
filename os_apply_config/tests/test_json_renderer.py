@@ -35,4 +35,4 @@ class JsonRendererTestCase(testtools.TestCase):
         self.assertEqual(desire_structure, result_structure)
         result = x.render('{{a.c}}', context)
         self.addDetail('result', content.text_content(result))
-        self.assertEqual(u'the quick brown fox', result)
+        self.assertEqual('the quick brown fox', result)

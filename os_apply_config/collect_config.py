@@ -27,7 +27,7 @@ def read_configs(config_files):
             try:
                 with open(input_path) as input_file:
                     yield (input_file.read(), input_path)
-            except IOError as e:
+            except OSError as e:
                 raise exc.ConfigException('Could not open %s for reading. %s' %
                                           (input_path, e))
 

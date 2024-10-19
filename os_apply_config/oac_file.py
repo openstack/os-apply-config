@@ -19,7 +19,7 @@ import pwd
 from os_apply_config import config_exception as exc
 
 
-class OacFile(object):
+class OacFile:
     DEFAULTS = {
         'allow_empty': True,
         'mode': None,
@@ -28,7 +28,7 @@ class OacFile(object):
     }
 
     def __init__(self, body, **kwargs):
-        super(OacFile, self).__init__()
+        super().__init__()
         self.body = body
 
         for k, v in self.DEFAULTS.items():
@@ -53,7 +53,7 @@ class OacFile(object):
         for key, default in self.DEFAULTS.items():
             value = getattr(self, key)
             if value != default:
-                a.append("%s=%s" % (key, repr(value)))
+                a.append("{}={}".format(key, repr(value)))
         return ", ".join(a) + ")"
 
     def set(self, key, value):
