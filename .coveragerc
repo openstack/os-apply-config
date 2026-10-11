@@ -1,7 +1,9 @@
 [run]
 branch = True
+parallel = True
 source = os_apply_config
 omit = os_apply_config/tests/*
 
 [report]
 ignore_errors = True
+show_missing = True
